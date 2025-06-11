@@ -61,6 +61,7 @@ class double_pendulum():
         cosb = self.p2.y / l2
         sinb = self.p2.x / l2
 
+
         if (self.p1.ax ** 2 + (self.p1.ay - self.g) ** 2) != 0:
             cosy = (self.p1.ay - self.g) / (self.p1.ax ** 2 + (self.p1.ay - self.g) ** 2) ** 0.5
             siny = self.p1.ax / (self.p1.ax ** 2 + (self.p1.ay - self.g) ** 2) ** 0.5

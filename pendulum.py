@@ -54,7 +54,7 @@ times = []
 
 def update():
     global x, y,vx, vy,ax, ay, tm, color, ang, angls
-    while tm < 116:#36.46:
+    while tm < 11600000:#36.46:
         if is_run:
                 l = ((x ** 2 + y ** 2) ** 0.5)
                 cosa = y / l
@@ -103,8 +103,8 @@ def update():
     plt.show()
 
 
-update()
-sys.exit()
+#update()
+##sys.exit()
 t = Thread(target=update)
 t.start()
 #update()
