@@ -21,8 +21,11 @@ class pendulum:
         self.x = x
         self.y = y
         self.m = m
-
-dt = 10**(-5.5)
+# first -5.5 -1.61186 0.72041
+# first -6   -1.61364 0.71147
+#second -5.5 -1.6111 0.72544
+#second -6
+dt = 10**(-6)
 g = 9.8
 time_of_simulation = 0
 massive_of_angles = []
@@ -66,7 +69,7 @@ def update():
         b *= asin(sinb) / abs(asin(sinb))
 
 
-    while time_of_simulation < 20:
+    while time_of_simulation < 5:
         t2 = T2
         #preva = a
 
@@ -102,8 +105,8 @@ def update():
         p2.ay = -T2 * cosb / p2.m + p1.ay - g
         p2.vx += p2.ax * dt
         p2.vy += p2.ay * dt
-        p2.x += p2.vx * dt
-        p2.y += p2.vy * dt
+        p2.x += p2.vx * dt + p2.ax*dt**2
+        p2.y += p2.vy * dt + p2.ay*dt**2
         p1.ax *= -1
         p1.ay *= -1
 
@@ -111,8 +114,8 @@ def update():
         p1.ay = -T1 * cosa / p1.m - g +  t2*pcosb/p1.m
         p1.vx += p1.ax * dt
         p1.vy += p1.ay * dt
-        p1.x += p1.vx * dt
-        p1.y += p1.vy * dt
+        p1.x += p1.vx * dt + p1.ax*dt**2
+        p1.y += p1.vy * dt + p1.ay*dt**2
         preva = a
         a = acos(-cosa)
         if sina != 0 :
@@ -166,11 +169,11 @@ while 1:
     pg.draw.circle(sc, (255, 255, 255), center=(250, 250), radius=10)
     pg.draw.aaline(sc, (255, 255, 255), (250, 250), (250 + p1.x*100, 250 - p1.y*100))
     pg.draw.aaline(sc, (255, 255, 255), (250 + p1.x*100, 250 - p1.y*100), (250 + p1.x*100 + p2.x*100, 250 - p1.y*100 - p2.y*100))
-    text = font.render(f"{round(time_of_simulation, 3)}", True, (255, 255, 255))
+    text = font.render(f"{round(time_of_simulation, 5)}", True, (255, 255, 255))
     sc.blit(text, (150, 600))
-    texta = font.render(f"{round(a, 3)}", True, (255, 25, 25))
+    texta = font.render(f"{round(a, 5)}", True, (255, 25, 25))
     sc.blit(texta, (350, 600))
-    textb = font.render(f"{round(b, 3)}", True, (25, 255, 25))
+    textb = font.render(f"{round(b, 5)}", True, (25, 255, 25))
     sc.blit(textb, (350, 700))
 
     pg.display.update()

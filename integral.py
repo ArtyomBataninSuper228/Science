@@ -204,5 +204,46 @@ def get_distribution(m):
     return a, numbers
 
 
+def do_runge_kutta_classic_step(sys, dif, step, h):
+    sys2 = copy.copy(sys)
+    k1 = dif(sys2)
+    sys2 = step(sys2, h / 2, k1)
+    k2 = dif(sys2)
+    sys2 = step(sys2, h / 2, k2)
+    k3 = dif(sys2)
+    sys2 = step(sys2, h, k3)
+    k4 = dif(sys2)
+    k = (k1 + k2 * 2 + k3 * 2 + k4) / 6
+    sys = step(sys, h, k)
+    return sys
+
+
+def do_rk4_1_step(sys, dif, step, h):
+    sys2 = copy.copy(sys)
+    k1 = dif(sys2)
+    sys2 = step(sys2, h, k1)
+    k2 = dif(sys2)
+    sys2 = step(sys2, h, k2)
+    k3 = dif(sys2)
+    sys2 = step(sys2, h, k3)
+    k4 = dif(sys2)
+    k = (k1*15 + k2 * 7 + k3  + k4) / 24
+    sys = step(sys, h, k)
+    return sys
+
+def do_rk4_2_step(sys, dif, step, h):
+    sys2 = copy.copy(sys)
+    k1 = dif(sys2)
+    sys2 = step(sys2, h / 2, k1)
+    k2 = dif(sys2)
+    sys2 = step(sys2, h / 2, k2)
+    k3 = dif(sys2)
+    sys2 = step(sys2, h/2, k3)
+    k4 = dif(sys2)
+    k = (k4 - k3  + k2 * 2 + k1) / 3
+    sys = step(sys, h, k)
+    return sys
+
+
 
 
