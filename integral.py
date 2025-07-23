@@ -10,6 +10,7 @@ import soundfile
 import rawpy
 
 
+
 e = math.e
 m = []
 mv = []
@@ -258,5 +259,26 @@ def do_rk4_3_step(sys, dif, step, h):
     return sys
 
 
+def test_sys(sys, fd, fs, k, h):
+    sys2 = fs(copy.copy(sys), h, k)
+    delta =  fd(sys2) - k
+    return delta
+def seek_solution(sys, fd, fs, h):
+    st_sys = copy.copy(sys)
+    k1 = fd(sys)
+    sys = fs(sys, h, k1)
+    k2 = fd(sys)
+    delta = k2-k1
+    t1 = test_sys(st_sys, fd, fs, k1, h)
+    t2 = test_sys(st_sys, fd, fs, k2, h)
+    a = t2-t1
+    b = t1 - a
+    n = -b/a - 1
+    return k1 + delta*n
 
+def do_backward_euler_step(sys, dif, step, h):
+    sys2 = copy.copy(sys)
+    k = seek_solution(sys2, dif, step, h)
+    sys = step(sys, h, k)
+    return sys
 

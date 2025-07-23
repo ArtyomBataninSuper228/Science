@@ -4,7 +4,7 @@ import copy
 
 g = 9.8
 
-classic_air_sys = np.matrix([0, 1, 0.001, 1], dtype=float)#x, v, k, m
+classic_sys = np.matrix([0, 1, 0.001, 1], dtype=float)#x, v, k, m
 def create_pendulum_sys(x, v, k, m):
     return np.matrix([x, v, k, m], dtype= float)
 def get_diff(sys):
