@@ -244,6 +244,19 @@ def do_rk4_2_step(sys, dif, step, h):
     sys = step(sys, h, k)
     return sys
 
+def do_rk4_3_step(sys, dif, step, h):
+    sys2 = copy.copy(sys)
+    k1 = dif(sys2)
+    sys2 = step(sys2, h / 3, k1)
+    k2 = dif(sys2)
+    sys2 = step(sys2, h / 3, k2)
+    k3 = dif(sys2)
+    sys2 = step(sys2, h/3, k3)
+    k4 = dif(sys2)
+    k = (27*k4 - 69*k3 + 69*k2 - 19*k1)/8
+    sys = step(sys, h, k)
+    return sys
+
 
 
 
