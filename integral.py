@@ -258,12 +258,25 @@ def do_rk4_3_step(sys, dif, step, h):
     sys = step(sys, h, k)
     return sys
 
+def get_length(vector):# Возвращает длину n мерного вектора записаного в np.matrix
+    if type(vector) != numpy.matrix:
+        return vector
+    elif vector.shape[0] == 1:
+        sm = 0
+        for i in range(vector.shape[1]):
+            sm += get_length(vector[0, i])**2
+        return sm**0.5
 
-def test_sys(sys, fd, fs, k, h):
+    else:
+        sm = 0
+        for i in range(len(vector)):
+            sm += get_length(vector[i])**2
+        return sm**0.5
+def test_sys(sys, fd, fs, k, h):# функция ошибки при подборе значения f'(x+h) для решения уравнения f(x+h) = f(x) + hf'(x+h)
     sys2 = fs(copy.copy(sys), h, k)
     delta =  fd(sys2) - k
-    return delta
-def seek_solution(sys, fd, fs, h):
+    return get_length(delta)
+def seek_solution_1d(sys, fd, fs, h):# функция подбирает значение f'(x+h) что бы минимизировать ошибку при решении уравнения f(x+h) = f(x) + hf'(x+h)
     st_sys = copy.copy(sys)
     k1 = fd(sys)
     sys = fs(sys, h, k1)
@@ -275,10 +288,38 @@ def seek_solution(sys, fd, fs, h):
     b = t1 - a
     n = -b/a - 1
     return k1 + delta*n
+def seek_solution_nd(sys, fd, fs, h):#аналогична прошлой, просто для многомерных функций
+    st_sys = copy.copy(sys)
+    k1 = fd(sys)
+    sys = fs(sys, h, k1)
+    k2 = fd(sys)
+    delta = k2-k1
+    #t1 = test(st_sys, fd, fs, k1, h)
+    #t2 = test(st_sys, fd, fs, k2, h)
+    #a = t2-t1
+    #b = t1 - a
+    #n = -b/a - 1
+    num = 5
+    '''
+    ks = []
+    errors = []
+    for i in range(num*2):
+        errors.append(float(test(st_sys, fd, fs, k1 + delta/num*i, h)))
+        ks.append(i)
+    pyplot.plot(ks, errors)
+    pyplot.show()
+    '''
+    t1 = test_sys(st_sys, fd, fs, k1, h)
+    t2 = test_sys(st_sys, fd, fs, k1 + delta/num, h)
+    a = t2 - t1
+    b = t1 - a
+    n = -b/a - 1
+    #print(test(st_sys, fd, fs, k1 + delta*n/num, h), n)
+    return k1 + delta*n/num
 
 def do_backward_euler_step(sys, dif, step, h):
     sys2 = copy.copy(sys)
-    k = seek_solution(sys2, dif, step, h)
+    k = seek_solution_nd(sys2, dif, step, h)
     sys = step(sys, h, k)
     return sys
 

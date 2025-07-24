@@ -3,8 +3,8 @@ from integral import *
 from integration_systems import air_systems
 from integration_systems import pendulum_systems as pend
 from integration_systems import spring_pendulum
-
-p1 = air_systems.classic_sys
+s = pend
+p1 = s.classic_sys
 p2 = copy.copy(p1)
 p3 = copy.copy(p1)
 p4 = copy.copy(p1)
@@ -20,10 +20,10 @@ x5 = []
 x6 = []
 t = []
 time = 0
-h = 10**(-0)
-toe = 10000
+h = 10**(-4)
+toe = 10
 
-s = air_systems
+
 while time <= toe:
     p1 = s.do_step(p1, h, s.get_diff(p1))
     p2 = do_runge_kutta_classic_step(p2, s.get_diff, s.do_step, h)
@@ -37,13 +37,13 @@ while time <= toe:
     x2.append(p2[0, 0])
     y2.append(p2[0, 1])
     """
-    true_val = s.get_true_ans(s.classic_sys, 1, time)[0]
-    x.append(p1[0, 0] - true_val)
-    x2.append(p2[0, 0] - true_val)
-    x3.append( p3[0, 0] - true_val)
-    x4.append(p4[0, 0] - true_val)
-    x5.append(p5[0, 0] - true_val)
-    x6.append(p6[0,0] - true_val)
+    true_val = 0#s.get_true_ans(s.classic_sys, 1, time)[0]
+    x.append(p1[0, 0]**2 + p1[0, 1]**2 - true_val)
+    x2.append(p2[0, 1] - true_val)
+    x3.append( p3[0, 1] - true_val)
+    x4.append(p4[0, 1] - true_val)
+    x5.append(p5[0, 1] - true_val)
+    x6.append(p6[0,1] - true_val)
     t.append(time)
 
 xaxis = 'time'
