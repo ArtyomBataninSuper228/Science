@@ -19,12 +19,12 @@ prev.set_alpha(1)
 #mass = 1
 g = 9.8
 x = 1
-y = -100
+y = -1
 vx = 0
 vy = 0
 ax = 0
 ay = 0
-dt = 10**(-3)
+dt = 10**(-4.5)
 tm = 0
 a = 0
 r = (x**2 + y**2)**0.5
@@ -116,9 +116,9 @@ while 1:
 
         elif e.type==pg.KEYDOWN:
             is_run = not is_run
-    pg.draw.aaline(sc, color = (255, 255, 255), start_pos=(250,250), end_pos=(x+250, 250+y))
+    pg.draw.aaline(sc, color = (255, 255, 255), start_pos=(250,250), end_pos=(x*100+250, 250+y*100))
     pg.draw.circle(sc, color=(255, 255,255), radius=5, center=(250, 250))
-    pg.draw.circle(sc, color=color, radius=5, center=(x + 250, 250 + y))
+    pg.draw.circle(sc, color=color, radius=5, center=(x*100 + 250, 250 + y*100))
     sc.blit(prev, (0, 0))
 
 

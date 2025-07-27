@@ -12,6 +12,7 @@ import rawpy
 
 
 e = math.e
+"""
 m = []
 mv = []
 mt = []
@@ -204,7 +205,7 @@ def get_distribution(m):
         numbers.append(m.count(el)/l)
     return a, numbers
 
-
+"""
 def do_runge_kutta_classic_step(sys, dif, step, h):
     sys2 = copy.copy(sys)
     k1 = dif(sys2)
@@ -219,7 +220,7 @@ def do_runge_kutta_classic_step(sys, dif, step, h):
     return sys
 
 
-def do_rk4_1_step(sys, dif, step, h):
+def do_my4_1_step(sys, dif, step, h):
     sys2 = copy.copy(sys)
     k1 = dif(sys2)
     sys2 = step(sys2, h, k1)
@@ -232,7 +233,7 @@ def do_rk4_1_step(sys, dif, step, h):
     sys = step(sys, h, k)
     return sys
 
-def do_rk4_2_step(sys, dif, step, h):
+def do_my4_2_step(sys, dif, step, h):
     sys2 = copy.copy(sys)
     k1 = dif(sys2)
     sys2 = step(sys2, h / 2, k1)
@@ -245,7 +246,7 @@ def do_rk4_2_step(sys, dif, step, h):
     sys = step(sys, h, k)
     return sys
 
-def do_rk4_3_step(sys, dif, step, h):
+def do_my4_3_step(sys, dif, step, h):
     sys2 = copy.copy(sys)
     k1 = dif(sys2)
     sys2 = step(sys2, h / 3, k1)
