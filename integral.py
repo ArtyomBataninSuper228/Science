@@ -12,7 +12,7 @@ import rawpy
 
 
 e = math.e
-"""
+
 m = []
 mv = []
 mt = []
@@ -70,11 +70,11 @@ def create_grafic(massiv, data):
 def integral(min, max, dx, f):
     x = min
     S = 0
-    while x < max:
-        A = [x, f(x)]
+    while x <= max:
+        A = f(x)
         x += dx
-        B = [x, f(x)]
-        S += dx * (A[1]+B[1])/2
+        B = f(x)
+        S += dx * (A+B)/2
     return S
 def differenzial(f, dx, x=0):
     yf = f(x)
@@ -205,15 +205,15 @@ def get_distribution(m):
         numbers.append(m.count(el)/l)
     return a, numbers
 
-"""
+
 def do_runge_kutta_classic_step(sys, dif, step, h):
     sys2 = copy.copy(sys)
-    k1 = dif(sys2)
-    sys2 = step(sys2, h / 2, k1)
+    k1 = dif(sys)
+    sys2 = step(copy.copy(sys), h / 2, k1)
     k2 = dif(sys2)
-    sys2 = step(sys2, h / 2, k2)
+    sys2 = step(copy.copy(sys), h / 2, k2)
     k3 = dif(sys2)
-    sys2 = step(sys2, h, k3)
+    sys2 = step(copy.copy(sys), h, k3)
     k4 = dif(sys2)
     k = (k1 + k2 * 2 + k3 * 2 + k4) / 6
     sys = step(sys, h, k)
@@ -222,7 +222,7 @@ def do_runge_kutta_classic_step(sys, dif, step, h):
 
 def do_my4_1_step(sys, dif, step, h):
     sys2 = copy.copy(sys)
-    k1 = dif(sys2)
+    k1 = dif(sys)
     sys2 = step(sys2, h, k1)
     k2 = dif(sys2)
     sys2 = step(sys2, h, k2)
@@ -322,5 +322,14 @@ def do_backward_euler_step(sys, dif, step, h):
     sys2 = copy.copy(sys)
     k = seek_solution_nd(sys2, dif, step, h)
     sys = step(sys, h, k)
+    return sys
+
+
+def do_new_method_step(sys, dif, step, h):
+    k = dif(sys)
+    for i in range(100):
+        sys2 = do_backward_euler_step(copy.copy(sys), dif, step, h)
+        k = dif(sys2)
+    sys=step(sys, h, k)
     return sys
 
