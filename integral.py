@@ -334,7 +334,6 @@ def do_backward_euler_step(sys, dif, step, h):
     sys = step(sys, h, k)
     return sys
 
-
 def do_new_method_step(sys, dif, step, h): #pendulum full energy optimised
     sys1 = copy.copy(sys)
     sys2 = copy.copy(sys)
