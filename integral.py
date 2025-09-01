@@ -8,7 +8,7 @@ import math
 import numpy
 import soundfile
 import rawpy
-
+from matplotlib import pyplot
 
 
 e = math.e
@@ -204,7 +204,17 @@ def get_distribution(m):
     for el in a:
         numbers.append(m.count(el)/l)
     return a, numbers
-
+"""
+massive = fourie(func2, 100, 0, 0.01)
+m1 = []
+m2 = []
+for i in massive:
+    m1.append(i[0])
+    m2.append(i[1])
+create_grafic(m1, [m2])
+pyplot.plot(m1, m2)
+pyplot.show()
+"""
 
 def do_runge_kutta_classic_step(sys, dif, step, h):
     sys2 = copy.copy(sys)
@@ -325,11 +335,18 @@ def do_backward_euler_step(sys, dif, step, h):
     return sys
 
 
-def do_new_method_step(sys, dif, step, h):
-    k = dif(sys)
-    for i in range(100):
-        sys2 = do_backward_euler_step(copy.copy(sys), dif, step, h)
-        k = dif(sys2)
-    sys=step(sys, h, k)
-    return sys
+def do_new_method_step(sys, dif, step, h): #pendulum full energy optimised
+    sys1 = copy.copy(sys)
+    sys2 = copy.copy(sys)
+    sys2 = do_backward_2_step(sys2, dif, step, h)
+    sys1 = step(sys1, h, dif(sys))
+    sysr = (sys1*0.6531343815962066 + sys2*0.3468656184037933)
+    return sysr
 
+def do_backward_2_step(sys, dif, step, h):
+    k1 = seek_solution_nd(copy.copy(sys), dif, step, h)
+    sys2 = step(copy.copy(sys), h, k1)
+    k2 = seek_solution_nd(sys2, dif, step, h)
+    k = (k1+k2)/2
+    sys = step(sys, h, k)
+    return sys

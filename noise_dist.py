@@ -6,41 +6,40 @@ import numpy as np
 m = []
 base = 0
 
-for i in range(5456*3632):
-    k = random.randint(-2, 2)+ random.randint(-4, 4)+ random.randint(-6, 6)
+
+def open_row_photo(filename):
+    return rawpy.imread(filename).postprocess()
+
+for i in range(545*3632):
+    k = random.randint(0, 1)+ random.randint(0, 2)+ random.randint(-1, 3) + random.randint(-2, 4)
     res = base+k
+    if random.random() < 0.6:
+        res -= k
     if res <0:
         res = 0
     m.append(res)
 a, b = get_distribution(m)
-
-k = np.ndarray((3, 2, 7))
-print(k.shape)
+a.pop(0)
+b.pop(0)
 
  # Импортируем библиотеку rawpy
+print(1)
+rgb = open_row_photo("20250602_161531.dng")
+print(2)
+m2 = []
+for x in rgb:
+    for y in x:
+        m2.append(int(y[0]) + int(y[1]) + int(y[2]))
 
-raw_filename = 'DSC03411.ARW'  # Указываем путь к файлу
-with rawpy.imread(raw_filename) as raw:  # Открываем файл и получаем объект raw
-    #print(raw.raw_type)  # Выводим тип данных (плоский или стопка)
-    #print(raw.num_colors)  # Указываем количество цветовых компонентов
-    #print(raw.color_desc)  # Описываем описание цветов
-    #print(raw.raw_pattern.tolist())  # Выводим шаблон сенсора
-    #print(raw.black_level_per_channel)  # Указываем коррекцию чёрного уровня
-    #print(raw.white_level)  # Указываем уровень белого камеры
-    #print(raw.color_matrix.tolist())
-    rgb = raw.postprocess()
-    m2 = []
-    for x in rgb:
-        for y in x:
-            m2.append(y[1])
-    print(1)
-    c, d = get_distribution(m2)
+c, d = get_distribution(m2)
+c.pop(0)
+d.pop(0)
+print(list(map(int, c)))
+print(d)
 
-    print(2)
-    plot = plt.plot(a, b, c, d)
-    plt.show()
-    print(m2)
-print(m2[26])
+
+plot = plt.plot( c, d)
+plt.show()
 
 
 

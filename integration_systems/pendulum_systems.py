@@ -24,3 +24,9 @@ def do_step(sys, h, k):
     sys[0, 0] += sys[0, 2]*h
     sys[0, 1] += sys[0, 3] * h
     return sys
+def get_errors(start_sys, sys):
+    l = (sys[0, 0] ** 2 + sys[0, 1] ** 2) ** 0.5
+    l0 = (start_sys[0, 0] ** 2 + start_sys[0, 1] ** 2) ** 0.5
+    E = (sys[0, 2]**2 + sys[0, 3]**2)*sys[0, 4]/2 + sys[0, 4]*g*(sys[0, 1]+l)
+    E0 = (start_sys[0, 2]**2 + start_sys[0, 3]**2)*start_sys[0, 4]/2 + start_sys[0, 4]*g*(start_sys[0, 1]+l)
+    return np.matrix([l/l0, E/E0], dtype= float)
