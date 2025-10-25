@@ -1,9 +1,20 @@
-a, b, c = map(complex, input().split())
 
-d1 = (a-b)+c
-d2 = (b-a)+c
-d3 = (a-c)+b
-d4 = (c-a)+b
-d5 = (b-c)+a
-d6 = (c-b)+a
-print(d1, d2, d3, d4, d5, d6)
+def f(a, b, c):
+    D = b**2 - 4*a*c
+    if D < 0:
+        raise ZeroDivisionError
+    x1  = (-b + D) / (2*a)
+    x2 = (-b - D) / (2*a)
+    return x1, x2
+
+
+
+a = []
+b = []
+for i in range(0, 200):
+    a.append(6 + 48*i)
+    b.append(616 + 17.5*i)
+for i in b:
+    if i in a:
+        print(i)
+print(966//60, 966%60)

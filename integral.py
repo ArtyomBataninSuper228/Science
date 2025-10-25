@@ -88,6 +88,7 @@ def fourie(func, max, min, dx):
     f = min_f
     res = []
 
+
     while f <= max_f:
         freq = copy.deepcopy(f)
         def fns(x):
@@ -96,7 +97,13 @@ def fourie(func, max, min, dx):
         def fnc(x):
             #print(math.sin(math.pi*x*freq))
             return math.cos(math.pi*x*freq)*func(x)
-        res.append((f, math.sqrt(integral(min, max, dx, fns)**2+ integral(min, max, dx, fns)**2)))
+        Asin = integral(min, max, dx, fns)
+        Acos = integral(min, max, dx, fnc)
+        A = (Asin**2 + Acos**2)**0.5
+        sinfi = Asin/A
+        cosfi = Asin / A
+        res.append((f, A, sinfi, cosfi))
+
         f += 1/(2*num*dx)
     return res
 
@@ -349,3 +356,29 @@ def do_backward_2_step(sys, dif, step, h):
     k = (k1+k2)/2
     sys = step(sys, h, k)
     return sys
+
+
+def get_variance(sample):
+    median = sum(sample)/len(sample)
+    variance = 0
+    for i in range(len(sample)):
+        variance += ((sample[i] - median)**2)/len(sample)
+    return variance
+
+
+signal, sampling_rate = soundfile.read("Artemii/2025-10-22 17.32.57.wav")
+maxt = len(signal)/sampling_rate - 1
+def f(t):
+    num = round(t*sampling_rate)
+    return signal[num]
+m = fourie(f, maxt/4, 0, 4/sampling_rate)
+f, datasin, datacos  = [], [], []
+
+for i in m:
+    f.append(i[0])
+    datasin.append(i[1]*i[2])
+    datacos.append(i[1]*i[3])
+pyplot.plot( f, datasin, datacos)
+pyplot.show()
+
+
