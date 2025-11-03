@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt, pyplot
 pg.init()
 sc = pg.display.set_mode((1400, 700))
 
-
+print("123" == "" or True)
 
 c = 331.46
 def create_diagram(A, B, tos, toe, l, width, heigth):

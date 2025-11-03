@@ -366,19 +366,28 @@ def get_variance(sample):
     return variance
 
 
-signal, sampling_rate = soundfile.read("Artemii/2025-10-22 17.32.57.wav")
-maxt = len(signal)/sampling_rate - 1
-def f(t):
-    num = round(t*sampling_rate)
-    return signal[num]
-m = fourie(f, maxt/4, 0, 4/sampling_rate)
-f, datasin, datacos  = [], [], []
+#signal, sampling_rate = soundfile.read("Artemii/2025-10-22 17.32.57.wav")
+#maxt = len(signal)/sampling_rate - 1
+#def f(t):
+#    num = round(t*sampling_rate)
+#    return signal[num]
+#m = fourie(f, maxt/4, 0, 4/sampling_rate)
+#f, datasin, datacos  = [], [], []
 
-for i in m:
-    f.append(i[0])
-    datasin.append(i[1]*i[2])
-    datacos.append(i[1]*i[3])
-pyplot.plot( f, datasin, datacos)
-pyplot.show()
+#for i in m:
+#    f.append(i[0])
+#    datasin.append(i[1]*i[2])
+#    datacos.append(i[1]*i[3])
+#pyplot.plot( f, datasin, datacos)
+#pyplot.show()
 
 
+def median(M):
+    return sum(M)/len(M)
+
+def dispersion(M):
+    dispersion = 0
+    med = median(M)
+    for i in range(0, len(M)):
+        dispersion += (M[i] - med)**2
+    return dispersion/len(M)
