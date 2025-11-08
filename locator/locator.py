@@ -108,7 +108,7 @@ def read(l = 1000, n = 10):
 
 
 
-f = open("Locator_experimentFurie", mode ="rb")
+f = open("Locator_experiment_furie", mode ="rb")
 data = json.loads(f.read())
 f.close()
 rawA = np.array(data["mA"])

@@ -3,7 +3,7 @@ from integral import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-file = open("Locator_experiment(8)")
+file = open("Locator_experiment_double")
 data = json.load(file)
 file.close()
 freq = 10000
@@ -49,8 +49,8 @@ def furie_sample(data, toe, dt, freq = 10000, sampels = 100):
 furieA = np.array(furie_sample(data["mA"], toe, dt, freq, sampels= 100))
 furieB = np.array(furie_sample(data["mB"], toe, dt, freq, sampels= 100))
 print(median(furieA[1]), dispersion(furieA[1])**0.5)
-Da = 1.5*dispersion(furieA[1])**0.5
-Db = 1.5*dispersion(furieB[1])**0.5
+Da = 1*dispersion(furieA[1])**0.5
+Db = 1*dispersion(furieB[1])**0.5
 for i in range(len(furieA[1])):
     if furieA[1][i] < Da:
         furieA[1][i] = 0
@@ -58,7 +58,7 @@ for i in range(len(furieA[1])):
         furieB[1][i] = 0
 furieA[1]/= furieA[1].max()
 furieB[1]/= furieB[1].max()
-file = open("Locator_experimentFurie", mode ="w")
+file = open("Locator_experiment_furie", mode ="w")
 data ={
     "dt": (toe-tos)/len(furieA[1]),
     "l": 0.27,
