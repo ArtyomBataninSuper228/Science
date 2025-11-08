@@ -3,7 +3,7 @@ from integral import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-file = open("Locator_experiment (8).")
+file = open("Locator_experiment(8)")
 data = json.load(file)
 file.close()
 freq = 10000
@@ -58,7 +58,7 @@ for i in range(len(furieA[1])):
         furieB[1][i] = 0
 furieA[1]/= furieA[1].max()
 furieB[1]/= furieB[1].max()
-file = open("Locator_experiment Furie.", mode = "w")
+file = open("Locator_experimentFurie", mode ="w")
 data ={
     "dt": (toe-tos)/len(furieA[1]),
     "l": 0.27,
