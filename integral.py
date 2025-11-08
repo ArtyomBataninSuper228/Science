@@ -87,8 +87,6 @@ def fourie(func, max, min, dx):
     max_f = 1/(2*dx)
     f = min_f
     res = []
-
-
     while f <= max_f:
         freq = copy.deepcopy(f)
         def fns(x):

@@ -1,8 +1,10 @@
 import copy
+import json
 import random
 import sys
+import numpy as np
+import torch
 from math import *
-#from numpy import *
 import pygame as pg
 import serial
 from random import randint
@@ -11,16 +13,17 @@ from matplotlib import pyplot as plt, pyplot
 
 pg.init()
 sc = pg.display.set_mode((1400, 700))
+layer  = pg.Surface((1400, 700))
 
-print("123" == "" or True)
-
+k =1
 c = 331.46
 def create_diagram(A, B, tos, toe, l, width, heigth):
-
+    array = torch.zeros([width, heigth, 3], dtype=torch.float)
+    global k
     minX = -c*toe/2 +l/2
     maxX = c*toe/2 - l/2
     maxY = (c*toe)/2
-    print(maxX, maxY)
+    #print(maxX, maxY)
     h = (toe-tos)/len(A)
     dl = (maxX-minX)
     k1 = dl/width
@@ -42,14 +45,18 @@ def create_diagram(A, B, tos, toe, l, width, heigth):
                 a = A[int((Ta - toe)/h)]
             if tos < Tb < toe:
                 b = B[int((Tb - toe) / h)]
-            a *= ((T0 + Ta)*c)
-            b *= ((T0 + Tb)*c)
-            amp = (abs(a*b)+1)/50
+            a *= ((T0 + Ta)*c)**2
+            b *= ((T0 + Tb)*c)**2
+            amp = (abs(a*b))
             #print(amp)
-            res = int(amp)%255
             #print(res)
-            pg.draw.rect(sc, (res, res, res), (x + width/2, heigth - y, 1, 1))
-ser = serial.Serial('/dev/cu.usbmodem101', 2000000)
+            array[width//2 + x, heigth - y-1] = amp
+            #pg.draw.rect(sc, (res, res, res), (x + width/2, heigth - y, 1, 1))
+    array/= array.max()
+    array *= 255
+    pg.surfarray.blit_array(layer, array.numpy())
+    #sc.blit(layer, (0,0))
+#ser = serial.Serial('/dev/cu.usbmodem101', 2000000)
 A = []
 B = []
 T = []
@@ -100,33 +107,60 @@ def read(l = 1000, n = 10):
 
 
 
-read(n = 1)
-A1 = copy.copy(A)
-B1 = copy.copy(B)
-read(n = 1)
-A2 = A
-B2 = B
-DeltaA = []
-DeltaB = []
-for i in range(len(A)):
-    DeltaA.append(A2[i] - A1[i])
-    DeltaB.append(B2[i] - B1[i])
-pyplot.plot(T,A1, T, B1)
-pyplot.show()
 
+f = open("Locator_experiment Furie.", mode = "rb")
+data = json.loads(f.read())
+f.close()
+rawA = np.array(data["mA"])
+A = []
 
+for i in rawA:
+    A.append(abs(i - rawA.mean()))
+
+A = np.array(A)
+A -= A.min()
+
+A *= 10
+rawB = np.array(data["mB"])
+B = []
+for i in rawB:
+    B.append(abs(i - rawB.mean()))
+
+B = np.array(B)
+B -= B.min()
+B *= 10
+tos = data["tos"]
+f = 1/data["dt"]
+
+toe  = len(A) / f
+#pyplot.plot(rawA)
+#pyplot.plot(rawB)
+#pyplot.show()
+
+create_diagram(A, B, tos, toe, 0.27, 1400, 700)
 
 
 while 1:
     for event in pg.event.get():
         if event.type == pg.QUIT:
             sys.exit()
-    read(n = 10)
+        elif event.type == pg.MOUSEBUTTONDOWN:
+            x, y = event.pos
+            x -= 700
+            y = 700 - y
+            x*= k
+            y*= k
+            print(x, y)
+
+    #read(n = 10)
     #plt.plot(T, A, T, B)
     #plt.show()
+
     sc.fill((0, 0, 0))
-    create_diagram(A, B, tos, toe, 0.27, 1400, 700)
+    sc.blit(layer, (0,0))
+    #pg.draw.line(sc, (255, 0, 0), (700, 0), (700, 700), 2)
     pg.display.update()
+    time.sleep(1/60)
 
 
 
