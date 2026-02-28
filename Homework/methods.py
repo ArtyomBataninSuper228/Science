@@ -1,8 +1,12 @@
 import copy
-
+from math import *
 randomfile = open("/dev/random", "rb")
 
 M = randomfile.read(100)
+
+
+def C(n, k):
+    return factorial(n) / (factorial(k) * factorial(n - k))
 
 def median(M):
     return sum(M)/len(M)
@@ -33,4 +37,8 @@ def split_to_columns(M, n):
             num_colum += 1 # переход к следующей колонке
 
     return colums
+
+def poisson(m, l):
+    return e**(-l)*(l)**m/gamma(m+1)
+
 

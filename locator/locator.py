@@ -10,6 +10,7 @@ import serial
 from random import randint
 import time
 from matplotlib import pyplot as plt, pyplot
+import datasayver2
 
 pg.init()
 sc = pg.display.set_mode((1400, 700))
@@ -36,18 +37,22 @@ def create_diagram(A, B, tos, toe, l, width, heigth):
             realX = x*k
             realY = y*k
             a, b = 0, 0
-            T0 = ((realX**2 + realY**2)**0.5)/c
-            Ta = (((realX-l)**2 + realY**2)**0.5)/c + T0
-            Tb = (((realX+l)**2 + realY**2)**0.5)/c + T0
+            T0 = (((realX)**2 + realY**2)**0.5)/c
+            #T0b = (((realX + 0.49) ** 2 + realY ** 2) ** 0.5) / c
+            Ta = (((realX-0.46)**2 + realY**2)**0.5)/c + T0
+            Tb = (((realX+0.02)**2 + realY**2)**0.5)/c + T0
+            #print((Ta-Tb)*343)
 
             if  tos< Ta < toe:
+                a = A[round((Ta - toe)/h)]
 
-                a = A[int((Ta - toe)/h)]
             if tos < Tb < toe:
-                b = B[int((Tb - toe) / h)]
-            a *= ((T0 + Ta)*c)**2
-            b *= ((T0 + Tb)*c)**2
+                b = B[round((Tb - toe) / h)]
+            #a *= ((T0a + Ta)*c)
+            #b *= ((T0b + Tb)*c)
             amp = (abs(a*b))
+            #if amp != 0:
+                #print(amp)
             #print(amp)
             #print(res)
             array[width//2 + x, heigth - y-1] = amp
@@ -57,87 +62,40 @@ def create_diagram(A, B, tos, toe, l, width, heigth):
     pg.surfarray.blit_array(layer, array.numpy())
     #sc.blit(layer, (0,0))
 #ser = serial.Serial('/dev/cu.usbmodem101', 2000000)
-A = []
-B = []
-T = []
-t = 0
-f = 60000
-tos = 10**-4
-toe = len(A)/f
-
-def read(l = 1000, n = 10):
-    try:
-        global A, B, T, t, toe, toe
-        A = []
-        B = []
-        T = []
-        t = 0
-        a = ser.readline()
-        while a != b'Start\r\n':
-            a = ser.readline()
-            # print(bytes(a, "utf-8") )
-        for i in range(l):
-            a, b = list(map(int, ser.readline().split()))
-            A.append(a / n)
-            B.append(b / n)
-            T.append(t)
-            t += 1 / f
-        for i in range(n - 1):
-            a = ser.readline()
-            while a != b'Start\r\n':
-                a = ser.readline()
-            for i in range(l):
-                a, b = list(map(int, ser.readline().split()))
-                A[i] += (a / n)
-                B[i] += (b / n)
-    except:
-        read(l, n)
-
-
-
-
-    mediana = sum(A) / len(A)
-    medianb = sum(B) / len(B)
-    for i in range(l):
-        A[i] = (A[i] - mediana)
-        B[i] = (B[i] - medianb)
-    tos = 0
-    toe = len(A) / f
 
 
 
 
 
-f = open("Locator_experiment_furie", mode ="rb")
+
+f = open("LOCATOR2_0/izmer2.json", mode ="rb")
 data = json.loads(f.read())
 f.close()
 rawA = np.array(data["mA"])
-A = []
-
-for i in rawA:
-    A.append(abs(i - rawA.mean()))
-
-A = np.array(A)
+plt.plot(data["mA"])
+plt.show()
+A = torch.tensor(data["mA"])
+B = torch.tensor(data["mB"])
 A -= A.min()
-
-A *= 10
-rawB = np.array(data["mB"])
-B = []
-for i in rawB:
-    B.append(abs(i - rawB.mean()))
-
-B = np.array(B)
 B -= B.min()
-B *= 10
+A/=A.max()
+B/=B.max()
+A += 0.4
+B += 0.4
+
+
+
+
+
 tos = data["tos"]
 f = 1/data["dt"]
-
 toe  = len(A) / f
+print(toe, tos)
 #pyplot.plot(rawA)
 #pyplot.plot(rawB)
 #pyplot.show()
 
-create_diagram(A, B, tos, toe, 0.27, 1400, 700)
+create_diagram(A, B, tos, toe, 0.5, 1400, 700)
 
 
 while 1:

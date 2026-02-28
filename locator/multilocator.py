@@ -3,7 +3,7 @@ from integral import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-file = open("Locator_experiment_double")
+file = open("Наушники.json", mode="r")
 data = json.load(file)
 file.close()
 freq = 10000
@@ -12,11 +12,11 @@ c = 343
 tos = data['tos']
 toe = len(data["mA"])*data["dt"]
 dt = data["dt"]
-h = len(data["mA"])/100
+#h = len(data["mA"])/100
 f = 1/data["dt"]
-
-
-
+pyplot.plot(data["mA"])
+#pyplot.plot(data["mB"])
+pyplot.show()
 
 def furie_sample(data, toe, dt, freq = 10000, sampels = 100):
     furiea = []
@@ -42,20 +42,21 @@ def furie_sample(data, toe, dt, freq = 10000, sampels = 100):
             A += log((func(time) * sinus(time)) ** 2 + (func(time) * cosinus(time)) ** 2 + 1)*time*c
 
             time += dt
-        furiea.append(A-prev)
+        furiea.append(A)
         prev = A
         times.append(st)
     return times, furiea
-furieA = np.array(furie_sample(data["mA"], toe, dt, freq, sampels= 100))
-furieB = np.array(furie_sample(data["mB"], toe, dt, freq, sampels= 100))
+samples = len(data["mA"])//50
+furieA = np.array(furie_sample(data["mA"], toe, dt, freq, sampels= samples))
+furieB = np.array(furie_sample(data["mB"], toe, dt, freq, sampels= samples))
 print(median(furieA[1]), dispersion(furieA[1])**0.5)
 Da = 1*dispersion(furieA[1])**0.5
 Db = 1*dispersion(furieB[1])**0.5
-for i in range(len(furieA[1])):
-    if furieA[1][i] < Da:
-        furieA[1][i] = 0
-    if furieB[1][i] < Db:
-        furieB[1][i] = 0
+#for i in range(len(furieA[1])):
+#    if furieA[1][i] < Da:
+#        furieA[1][i] = 0
+#    if furieB[1][i] < Db:
+#        furieB[1][i] = 0
 furieA[1]/= furieA[1].max()
 furieB[1]/= furieB[1].max()
 file = open("Locator_experiment_furie", mode ="w")
@@ -69,11 +70,5 @@ data ={
 json.dump(data, file)
 file.close()
 
-pyplot.plot(furieA[0], furieA[1], furieB[0], furieB[1])
-#pyplot.plot(furieB[0], furieB[1], color= (0, 1,0))
+pyplot.plot( furieA[0], furieA[1])
 pyplot.show()
-
-
-
-
-

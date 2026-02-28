@@ -8,8 +8,8 @@ import math
 import numpy
 import soundfile
 import rawpy
-from matplotlib import pyplot
-
+from matplotlib import pyplot as plt
+import torch
 
 e = math.e
 
@@ -389,3 +389,44 @@ def dispersion(M):
     for i in range(0, len(M)):
         dispersion += (M[i] - med)**2
     return dispersion/len(M)
+
+def fourie_torch(data_tensor, dx, max_f = None, minf = 0):
+    data_tensor-= data_tensor.min()
+    data_tensor/= data_tensor.max()
+    data_tensor-= 0.5
+    device = data_tensor.device
+    dtype = data_tensor.dtype
+    if max_f == None:
+        max_f = 1/(2*dx)
+    min_f = 1/(data_tensor.shape[0])/dx
+    N = data_tensor.shape[0]
+    NF = int((max_f-minf)/min_f)
+    mf = torch.zeros(NF, dtype = dtype, device = device)
+    mA = torch.zeros(NF, dtype = dtype, device = device)
+    msin = torch.zeros(NF, dtype = dtype, device = device)
+    mcos = torch.zeros(NF, dtype = dtype, device = device)
+    base_tensor = torch.zeros(N, dtype=dtype, device = device)
+    sintensor = torch.zeros(N, dtype=dtype, device = device)
+    costensor = torch.zeros(N, dtype=dtype, device = device)
+    outtensor = torch.zeros(N, dtype=dtype, device = device)
+    for i in range(N):
+        base_tensor[i] = 2*pi*i*dx
+
+    for i in range(NF):
+        F = min_f*(i)+minf
+        torch.sin(base_tensor*F, out = sintensor)
+        torch.cos(base_tensor*F, out = costensor)
+        torch.mul(data_tensor, sintensor, out = outtensor)
+        #plt.plot(sintensor.tolist())
+        #plt.plot(outtensor.tolist())
+        #plt.show()
+        S = outtensor.sum()
+        torch.mul(data_tensor, costensor, out = outtensor)
+        C = outtensor.sum()
+        A = (S**2+C**2)**0.5
+        mf[i] = F
+        mA[i] = A
+        msin[i] = S
+        mcos[i] = C
+    return(mf, mA, msin, mcos)
+
