@@ -15,7 +15,7 @@ sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sender.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1024 * 1024*10)
 sender.settimeout(1)
 speed = 10000
-num = 30000
+num = 10000
 
 def send(speed, num, p_size):
     for i in range(0, num):
@@ -25,16 +25,16 @@ def recieve():
     num = 0
     try:
         while 1:
-            sender.recvfrom(1024)
+            sender.recvfrom(1424)
             num += 1
     except TimeoutError:
         return num
 m = []
 
 def test():
-    for speed in range(20000, 30000, 500):
+    for speed in range(500, 10000, 500):
         m.append([])
-        for p_size in range(1400, 1401, 100):
+        for p_size in range(1000, 1001, 100):
             t = threading.Thread(target=send, args=(speed, num, p_size))
             t.start()
             recieved = recieve()
