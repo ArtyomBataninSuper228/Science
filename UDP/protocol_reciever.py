@@ -1,8 +1,9 @@
-import socket
+from protocol_base import *
 
-HOST = "127.0.0.1"
-PORT = 65432
+class Zero_Handler:
+    def __init__(self, connection):
+        self.is_alive = False
+        time.sleep(1)
+        connection.is_alive = 0
 
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind((HOST, PORT))
+server = Server('192.168.1.8', 55432, Zero_Handler)

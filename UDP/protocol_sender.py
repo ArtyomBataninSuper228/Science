@@ -1,16 +1,6 @@
-import socket
+from protocol_base import *
 
-sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-
-data = []
-for i in range(1024*1024*10):
-    data.append(i%256)
-data = bytes(data)
-
-packets = []
-
-psz = 1280
-delay = 1000
-frame = 2
-
+con = Connection('192.168.1.8', 65432)
+time.sleep(2)
+con.close()
+print('Closed')
