@@ -3,7 +3,30 @@ import queue
 import socket
 import threading
 import time
+import numpy as np
+from collections import deque
 
+class GlobalDataStream:
+    def __init__(self):
+        self.buffer = bytearray()
+        self.lock = threading.Lock()
+
+    def feed(self, data):
+        with self.lock:
+            self.buffer.extend(data)
+
+    def extract_block(self, max_size=10 * 1024 * 1024):
+        with self.lock:
+            if not self.buffer:
+                return None
+
+            size_to_take = min(len(self.buffer), max_size)
+
+            block_data = self.buffer[:size_to_take]
+
+            del self.buffer[:size_to_take]
+
+            return block_data
 
 
 class Datagram_Object:
@@ -16,7 +39,6 @@ class Datagram_Object:
         self.psz = 1280
         self.delay = 1000
         self.frame = 2
-        self.framesz = 1024*1024*10
         self.loss = 0
         self.time_of_start = time.time()
         self.send_block_number = 0
@@ -27,7 +49,7 @@ class Datagram_Object:
         '''
 
         Args:
-            id: short Тип пакета (0 - handshake, 1 - keepalive, 2 - data, 3 - non-block data)
+            id: short Тип пакета (0 - handshake, 1 - keepalive, 2 - data, 3 - non-block data, 4 - start of block, 5 - ack, 6 - end of block, 7 - logic ( num = 0 - starting block, num = 1 - ending block, ), )
             block_id: short Номер блока
             data: bytearray Данные
             to: (str ip, int port)
@@ -49,12 +71,104 @@ class Datagram_Object:
         self.socket.close()
         self.is_alive = False
 
+class Dock_sender:
+    def __init__(self,  conn:Connection, id):
+        self.conn = conn
+        self.is_started = False
+        self.id = id
+        self.ack_buffer = queue.Queue()
+        self.is_alive = True
+        th = threading.Thread(target=self.answer_ack)
+        th.start()
+        th2=threading.Thread(target=self.start())
+        th2.start()
+
+    def start(self):
+        self.is_started = False
+        while self.is_alive:
+            if self.id > self.conn.frame:
+                self.conn.send_docks.pop(self.id)
+                self.conn.send_docks.pop(self.id)
+                self.is_started = False
+                self.is_alive = False
+                return
+            self.buffer = self.conn.input_buffer.extract_block(self.conn.buffersz)
+            if len(self.buffer) == 0:
+                self.conn.send_docks.pop(self.id)
+                self.conn.send_docks.pop(self.id)
+                self.is_started = False
+                self.is_alive = False
+                return
+            self.block_id = self.conn.lasst_block_id + 1
+            self.conn.block_docks[self.block_id] = self
+            self.conn.last_block_id += 1
+            hesh = binascii.crc32(self.buffer)
+            data = len(self.buffer).to_bytes(4, byteorder='big') + hesh.to_bytes(4, byteorder='big')
+
+            while self.is_started == False:
+                self.conn.add_packet(4, self.block_id, 0, data)
+                time.sleep(1 / 10000)
+
+            i = 0
+            while i < len(self.buffer):
+                end = min(i + self.conn.psz, len(self.buffer))
+                data = self.buffer[i:end]
+                self.conn.add_packet(2, self.block_id, i, data)
+                i = end
+
+            while self.is_started == True:
+                self.conn.add_packet(6, self.block_id, 0, b'')
+                time.sleep(1 / 10000)
+
+
+
+    def answer_ack(self):
+        while self.is_alive:
+            while self.ack_buffer.empty() == False:
+                ack = self.ack_buffer.get()
+                for i in range(0, len(ack), 4):
+                    byte = int.from_bytes(ack[i:i+4], byteorder='big')
+                    self.conn.add_packet(2, self.block_id, byte, self.buffer[byte:byte+self.conn.psz])
+            time.sleep(1/10000)
+
+
+class Dock_reciever:
+    def __init__(self, conn:Connection, id, bufsz, hesh):
+        self.conn = conn
+        self.id = id
+        self.buffer = bytes(bufsz)
+        self.hesh = hesh
+        self.input_buffer = queue.Queue()
+        self.spaces = [0, bufsz-1]
+    def construct(self):
+        while self.spaces != []:
+            while self.input_buffer.empty() == False:
+                num, block_id, data = self.input_buffer.get() 
+
+
+
+
+
+
+
+
+
+
+
+
 class Connection(Datagram_Object):
     def __init__(self,ip,port, timeout = 1, buffersz = 1024*1024*10):
         soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         super().__init__(soc, ip, port, timeout, buffersz)
         self.recieved_packets  = queue.Queue()
-        self.packets_to_send = []
+        self.packets_to_send = queue.Queue()
+        self.input_buffer = GlobalDataStream()
+        self.last_block_id = 0
+        self.last_thread_id = 0
+        self.send_docks = dict()
+        self.block_docks = dict()
+        self.output_buffer = GlobalDataStream()
+        self.last_recieved_block_id = 0
 
 
         ### Trying_to_connect
@@ -86,8 +200,6 @@ class Connection(Datagram_Object):
 
         reciver_thread = threading.Thread(target=self.reciever)
         reciver_thread.start()
-        print('Succesful connected')
-        #self.reciever()
 
     def reciever(self):
         """
@@ -114,7 +226,22 @@ class Connection(Datagram_Object):
             block_id = int.from_bytes(data[1:5], byteorder='big')
             num = int.from_bytes(data[5:9], byteorder='big')
             data = data[9:]
-            self.recieved_packets.put((num, id_p, data))
+            if id_p == 7:
+                if num == 0:
+                    try:
+                        self.block_docks[block_id].is_started = True
+                    except Exception as e:
+                        pass
+                if num == 1:
+                    try:
+                        self.block_docks[block_id].is_started = False
+                    except Exception as e:
+                        pass
+                continue
+            if id_p == 5:
+                self.block_docks[block_id].ack_buffer.put(data)
+
+            self.recieved_packets.put((num, id_p, block_id, data))
 
     def sender(self):
         """
@@ -133,9 +260,9 @@ class Connection(Datagram_Object):
 
         while self.is_alive:
 
-            if self.packets_to_send:
+            if self.packets_to_send.empty() == False:
 
-                id_p, block_id, num, data = self.packets_to_send.popleft()
+                id_p, block_id, num, data = self.packets_to_send.get()
 
 
                 t += (1 / self.delay) * NSEC
@@ -153,6 +280,8 @@ class Connection(Datagram_Object):
 
                 while time.time_ns() < t:
                     pass
+    def add_packet(self,id_p, block_id, num, data):
+        self.packets_to_send.put((id_p, block_id, num, data))
 
 
     def close(self):
@@ -163,20 +292,34 @@ class Connection(Datagram_Object):
 
 
 class Server_Connection(Datagram_Object):
-    def __init__(self,socket, ip,port,  raw_parametrs, timeout = 1, buffersz = 1024*1024*10):
+    def __init__(self,socket, ip,port,  raw_parametrs, server, timeout = 1, buffersz = 1024*1024*10):
         super().__init__(socket, ip, port, timeout, buffersz)
         self.recieved_packets  = queue.Queue()
         process_thread = threading.Thread(target = self.packet_process)
         process_thread.start()
+        self.server = server
 
     def packet_process(self):
+        last_con = time.time()
         while self.is_alive:
             if not self.recieved_packets.empty():
-                packet = self.recieved_packets.get()
-                if packet[0] == 0:
-                    self.send_packet(0, 0, b'', (self.ip, self.port), 0)  ### АСК
-                if packet[0] == 1:
-                    self.send_packet(1, 0, b'', (self.ip, self.port), 0)  ### АСК
+                while not self.recieved_packets.empty():
+                    packet = self.recieved_packets.get()
+                    if packet[0] == 0:
+                        self.send_packet(0, 0, b'', (self.ip, self.port), 0)  ### АСК
+                    if packet[0] == 1:
+                        self.send_packet(1, 0, b'', (self.ip, self.port), 0)  ### АСК
+                last_con = time.time()
+            time.sleep(1/100000)
+            if time.time() - last_con > self.timeout:
+                self.close()
+                break
+    def close(self):
+        self.is_alive = False
+        self.server.connections.remove(self)
+
+
+
 
 
 
@@ -222,6 +365,7 @@ class Server_Connection(Datagram_Object):
 class Server (Datagram_Object):
     def __init__(self,ip,port, handler, timeout = 1, buffersz = 1024*1024*10, ):
         soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        soc.settimeout(None)
         super().__init__(soc, ip, port, timeout, buffersz)
         self.socket.bind((self.ip, self.port))
         self.socket.settimeout(timeout)
@@ -234,6 +378,8 @@ class Server (Datagram_Object):
             try:
                 data, addr = self.socket.recvfrom(1500)
             except socket.timeout:
+                continue
+            except ConnectionResetError, ConnectionAbortedError, ConnectionRefusedError:
                 continue
             data_hash = data[-4:]
             data = data[:-4]
