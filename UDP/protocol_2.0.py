@@ -3,7 +3,7 @@ import queue
 import socket
 import threading
 import time
-import numpy as np
+import math
 from collections import deque
 
 
@@ -62,11 +62,71 @@ Inner Packet ID:
 """
 '''
 Packet Structure:
-ID (Global id (0-9) + inner id (0-9)) ||| DATA ||| HESH 
+ID (Global id (0-9) + inner id (0-9)) ||| Connection ID ||| DATA ||| HESH 
 
 Inner packet structure:
-ID (Global id (0-9) + inner id (0-9)) ||| Inner id ||| DATA ||| HESH 
+ID (Global id (0-9) + inner id (0-9)) ||| Connection ID  ||| packet_id ||| Num (0-256) ||| Total message len (0-256) ||| DATA ||| HESH 
+
+
+#Inner connection ID:
+#client: 0 2 4 6
+#server: 1 3 5 7
 '''
+
+
+class Inner_Connection:
+    def __init__(self, conn:Connection):
+        self.buffer = GlobalDataStream()
+        self.conn = conn
+        self.packets = []
+        self.waiting = []
+        self.last_sended_packet_id = 0
+    def put_packet(self, id, data):
+
+
+        num = int.from_bytes(data[0:1], byteorder='big')
+        length = int.from_bytes(data[1:2], byteorder='big')
+        packet_id = int.from_bytes(data[2:6], byteorder='big')
+        ack_pack = data[2:6]
+        self.conn.add_packet(global_id= 1, inner_id = 0, data = ack_pack, is_left=True)
+        data = data[6:]
+
+
+        if num == 0 and len(self.packets) != length:
+            self.packets = []
+            for i in range(length):
+                self.packets.append([])
+        self.packets[num] = data
+        if num == length - 1:
+            message = bytes()
+            for i in self.packets:
+                message += i
+            self.process_message(id, message)
+    def process_message(self, id,  message):
+        if id == 0:
+            self.conn.is_started = True
+            connection_id = int.from_bytes(message[:4], byteorder='big')
+            self.conn.id = id
+    def send_msg(self, id, msg):
+        num_packets = math.ceil(len(msg)/self.conn.psz)
+        packets = []
+        for i in range(num_packets):
+            packet = msg[i*self.conn.psz:(i+1)*self.conn.psz]
+            self.send(id, packet, i, num_packets)
+
+    def send(self, id, packet, message_num, total_num):
+        self.last_sended_packet_id += 1
+        self.last_sended_packet_id = self.last_sended_packet_id%(2**32)
+        my_id = self.last_sended_packet_id
+        self.waiting.append(self.last_sended_packet_id)
+        packet = message_num.to_bytes(1, byteorder='big')+total_num.to_bytes(1, byteorder='big') + self.last_sended_packet_id.to_bytes(4, byteorder='big') + bytes(packet)
+
+        while my_id in self.waiting:
+            self.conn.add_packet(global_id= 0, inner_id = id, data = packet, is_left=True)
+            time.sleep(self.conn.ping/1000)
+
+
+
 
 
 
@@ -81,8 +141,10 @@ class Connection():
         self.buffersz = buffersz
         self.psz = 1280
         self.delay = 1000
+        self.ping = 50
         self.frame = 2
         self.loss = 0
+        self.is_started = False
         self.time_of_start = time.time()
         self.send_block_number = 0
         self.recieve_block_number = 0
@@ -92,17 +154,16 @@ class Connection():
         self.input_buffer = GlobalDataStream()
         self.last_block_id = 0
         self.last_recieved_block_id = 0
-        self.inner_connections_table = dict()
-        self.last_inner_connection_id = 0
+        self.inner_channel = Inner_Connection(self)
 
     def add_packet(self, global_id, inner_id, data, is_left = False):
         if is_left:
-            self.packets_to_send.appendleft((global_id * 10 + inner_id, data))
+            self.packets_to_send.appendleft((global_id * 10 + inner_id, self.id, data))
         else:
-            self.packets_to_send.append((global_id * 10 + inner_id, data))
+            self.packets_to_send.append((global_id * 10 + inner_id, self.id,  data))
 
-    def send_packet(self, id, data):
-        all_data = id.to_bytes(1, byteorder='big') + bytes(data)
+    def send_packet(self, id, connection_id,  data):
+        all_data = id.to_bytes(1, byteorder='big') + connection_id.to_bytes() + bytes(data)
         hesh = binascii.crc32(all_data)
         all_data = all_data + hesh.to_bytes(4, byteorder='big')
         self.socket.sendto(all_data, (self.ip, self.port))
@@ -140,10 +201,21 @@ class Connection():
             data = data[1:]
             global_id = id//10
             inner_id = id%10
-            if global_id in (0, 1):
-                inner_connection_id = int.from_bytes(data[:4], byteorder='big')
-                data = data[4:]
+            if global_id in (0, 1): ## Inner Channel
                 if global_id == 0:
+                    self.inner_channel.put_packet(inner_id, data)
+                if global_id == 1:
+                    message_id = int.from_bytes(data[:4], byteorder='big')
+                    if message_id in self.inner_channel.waiting:
+                        self.inner_channel.waiting.remove(message_id)
+            if global_id == 2:
+                pass ### To construct block from packets
+            if global_id == 3:
+                pass ### To resend loss
+            if global_id == 4:
+                pass ### Keep alive
+
+
 
 
 
