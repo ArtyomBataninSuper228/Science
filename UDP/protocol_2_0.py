@@ -76,7 +76,7 @@ class Inner_Client_Connection:
         self.buffer = GlobalDataStream()
         self.conn = conn
         self.packets = []
-        self.waiting = []
+        self.waiting = dict()
         self.last_sended_packet_id = 0
         self.last_recieved_id = -1
     def put_packet(self, id, data):
@@ -128,17 +128,18 @@ class Inner_Client_Connection:
 
     def send(self, id, packet, message_num, total_num):
         self.last_sended_packet_id += 1
-        self.last_sended_packet_id = self.last_sended_packet_id%(2**32)
+        self.last_sended_packet_id = self.last_sended_packet_id % (2 ** 32)
         my_id = self.last_sended_packet_id
-        self.waiting.append(self.last_sended_packet_id)
-        packet = message_num.to_bytes(1, byteorder='big')+total_num.to_bytes(1, byteorder='big') + self.last_sended_packet_id.to_bytes(4, byteorder='big') + bytes(packet)
-
-        for i in range(int(self.conn.timeout/self.conn.ping*1000)):
-            self.conn.add_packet(global_id= 0, inner_id = id, data = packet, is_left=True)
-            time.sleep(1/10)
-            if my_id not in self.waiting:
+        packet = message_num.to_bytes(1, byteorder='big') + total_num.to_bytes(1,
+                                                                               byteorder='big') + self.last_sended_packet_id.to_bytes(
+            4, byteorder='big') + bytes(packet)
+        event = threading.Event()
+        self.waiting[my_id] = event
+        for i in range(int(self.conn.timeout / 0.2)):
+            self.conn.add_packet(global_id=0, inner_id=id, data=packet, is_left=True)
+            if event.wait(0.2):
+                self.waiting.pop(my_id)
                 return
-        self.conn.close()
         raise TimeoutError
 
 
@@ -247,7 +248,7 @@ class Connection():
                 if global_id == 1:
                     message_id = int.from_bytes(data[:4], byteorder='big')
                     if message_id in self.inner_channel.waiting:
-                        self.inner_channel.waiting.remove(message_id)
+                        self.inner_channel.waiting[message_id].set()
             if global_id == 2:
                 pass ### To construct block from packets
             if global_id == 3:
@@ -279,7 +280,7 @@ class Inner_Server_Connection:
         self.buffer = GlobalDataStream()
         self.conn = conn
         self.packets = []
-        self.waiting = []
+        self.waiting = dict()
         self.last_sended_packet_id = 0
         self.last_recieved_id = -1
     def put_packet(self, id, data):
@@ -334,13 +335,13 @@ class Inner_Server_Connection:
         self.last_sended_packet_id += 1
         self.last_sended_packet_id = self.last_sended_packet_id % (2 ** 32)
         my_id = self.last_sended_packet_id
-        self.waiting.append(self.last_sended_packet_id)
         packet = message_num.to_bytes(1, byteorder='big') + total_num.to_bytes(1,byteorder='big') + self.last_sended_packet_id.to_bytes(4, byteorder='big') + bytes(packet)
-
-        for i in range(int(self.conn.timeout / self.conn.ping * 1000)):
+        event = threading.Event()
+        self.waiting[my_id] = event
+        for i in range(int(self.conn.timeout/0.2)):
             self.conn.add_packet(global_id=0, inner_id=id, data=packet, is_left=True)
-            time.sleep(self.conn.ping / 1000)
-            if my_id not in self.waiting:
+            if event.wait(0.2):
+                self.waiting.pop(my_id)
                 return
         raise TimeoutError
 
@@ -385,8 +386,9 @@ class Server_Connection():
                 while not self.recieved_packets.empty():
                     id, data, addr = self.recieved_packets.get()
                     if addr != (self.ip, self.port):
-                        self.server.registered_addreses.remove((self.ip, self.port))
-                        self.server.registered_addreses.append(addr)
+                        print(addr, self.ip, self.port)
+                        self.server.addr_id.pop((self.ip, self.port))
+                        self.server.addr_id[addr] = id
                         self.ip = addr[0]
                         self.port = addr[1]
 
@@ -399,7 +401,7 @@ class Server_Connection():
 
                             message_id = int.from_bytes(data[:4], byteorder='big')
                             if message_id in self.inner_channel.waiting:
-                                self.inner_channel.waiting.remove(message_id)
+                                self.inner_channel.waiting[message_id].set()
                     if global_id == 2:
                         pass  ### To construct block from packets
                     if global_id == 3:
