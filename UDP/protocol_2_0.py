@@ -106,6 +106,7 @@ class Inner_Client_Connection:
             message = bytes()
             for i in self.packets:
                 message += i
+            self.packets = []
             self.process_message(id, message)
     def process_message(self, id,  message):
         if id == 0:
@@ -113,6 +114,9 @@ class Inner_Client_Connection:
             connection_id = int.from_bytes(message[:4], byteorder='big')
             self.conn.id = connection_id
             print("Registered!", connection_id)
+        elif id == 3:
+            self.conn.user_inner_buffer.put(message)
+
     def send_msg(self, id, msg):
         num_packets = math.ceil(len(msg)/self.conn.psz)
         if num_packets == 0:
@@ -131,9 +135,10 @@ class Inner_Client_Connection:
 
         for i in range(int(self.conn.timeout/self.conn.ping*1000)):
             self.conn.add_packet(global_id= 0, inner_id = id, data = packet, is_left=True)
-            time.sleep(self.conn.ping/1000)
+            time.sleep(1/10)
             if my_id not in self.waiting:
                 return
+        self.conn.close()
         raise TimeoutError
 
 
@@ -148,10 +153,12 @@ class Connection():
         self.port = port
         self.id = 0
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, buffersz)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, buffersz)
         self.timeout = timeout
         self.buffersz = buffersz
         self.psz = 1280
-        self.delay = 100
+        self.delay = 10000
         self.ping = 50
         self.frame = 2
         self.loss = 0
@@ -169,17 +176,21 @@ class Connection():
         sender.start()
         reciever = threading.Thread(target=self.packet_reciever)
         reciever.start()
+        self.user_inner_buffer = queue.Queue()
 
         self.inner_channel = ICC(self)
-        try:
-            print('Sending packets...')
-            self.inner_channel.send_msg(0, b'0')
-        except TimeoutError:
-            self.close()
-            raise TimeoutError
+
+        self.inner_channel.send_msg(0, b'0')
+
 
     def send_inner(self, msg):
         self.inner_channel.send_msg(3, msg)
+    def recv_inner(self):
+         while self.is_alive:
+             if self.user_inner_buffer.empty() == False:
+                 return self.user_inner_buffer.get()
+             time.sleep(1/10000)
+
 
     def add_packet(self, global_id, inner_id, data, is_left = False):
         if is_left:
@@ -199,23 +210,21 @@ class Connection():
         while self.is_alive:
             if len(self.packets_to_send) != 0:
                 id_p, data = self.packets_to_send.popleft()
-                t += (1 / self.delay) * NSEC
+                #t += (1 / self.delay) * NSEC
                 self.send_packet(id_p, data)
                 while time.time_ns() < t:
                     pass
+                time.sleep(1/self.delay)
 
 
             else:
-                t += (1 / self.delay) * NSEC
-                while time.time_ns() < t:
-                    pass
+                time.sleep(1 / self.delay)
                 pass
-                '''
-                t += 2 * (1 / self.delay) * NSEC
-                self.send_packet(40, b'')
-                while time.time_ns() < t:
-                    pass
-                '''
+                #t += 2 * (1 / self.delay) * NSEC
+                #self.send_packet(40, b'')
+                #while time.time_ns() < t:
+                #    pass
+
 
     def packet_reciever(self):
         while self.is_alive:
@@ -233,14 +242,11 @@ class Connection():
             data = data[1:]
             global_id = id//10
             inner_id = id%10
-            print(id)
             if global_id in (0, 1): ## Inner Channel
                 if global_id == 0:
                     self.inner_channel.put_packet(inner_id, data)
                 if global_id == 1:
-
                     message_id = int.from_bytes(data[:4], byteorder='big')
-                    print(message_id, self.inner_channel.waiting)
                     if message_id in self.inner_channel.waiting:
                         self.inner_channel.waiting.remove(message_id)
             if global_id == 2:
@@ -280,7 +286,6 @@ class Inner_Server_Connection:
     def put_packet(self, id, data):
 
 
-
         num = int.from_bytes(data[0:1], byteorder='big')
         length = int.from_bytes(data[1:2], byteorder='big')
         packet_id = int.from_bytes(data[2:6], byteorder='big')
@@ -306,15 +311,15 @@ class Inner_Server_Connection:
             message = bytes()
             for i in self.packets:
                 message += i
-            self.process_message(id, message)
+            self.packets = []
+            t = threading.Thread(target = self.process_message, args = (id, message,))
+            t.start()
+            #self.process_message(id, message)
     def process_message(self, id,  message):
-        print('Processing message')
         if id == 0:
-            self.send_msg(0, b'')
-            #self.conn.add_packet(global_id= 0, inner_id = 0, data = self.conn.id.to_bytes(4, byteorder='big'), is_left=True)
-            #todo
-        else:
-            print(message)
+            pass
+        elif id == 3:
+            self.send_msg(3, message)
     def send_msg(self, id, msg):
         num_packets = math.ceil(len(msg)/self.conn.psz)
         if num_packets == 0:
@@ -325,14 +330,17 @@ class Inner_Server_Connection:
 
     def send(self, id, packet, message_num, total_num):
         self.last_sended_packet_id += 1
-        self.last_sended_packet_id = self.last_sended_packet_id%(2**32)
+        self.last_sended_packet_id = self.last_sended_packet_id % (2 ** 32)
         my_id = self.last_sended_packet_id
         self.waiting.append(self.last_sended_packet_id)
-        packet = message_num.to_bytes(1, byteorder='big')+total_num.to_bytes(1, byteorder='big') + self.last_sended_packet_id.to_bytes(4, byteorder='big') + bytes(packet)
+        packet = message_num.to_bytes(1, byteorder='big') + total_num.to_bytes(1,byteorder='big') + self.last_sended_packet_id.to_bytes(4, byteorder='big') + bytes(packet)
 
         for i in range(int(self.conn.timeout / self.conn.ping * 1000)):
             self.conn.add_packet(global_id=0, inner_id=id, data=packet, is_left=True)
             time.sleep(self.conn.ping / 1000)
+            if my_id not in self.waiting:
+                return
+        raise TimeoutError
 
 ISC = Inner_Server_Connection
 
@@ -354,14 +362,18 @@ class Server_Connection():
         self.recieved_packets = queue.Queue()
         self.packets_to_send = deque()
         self.is_alive = True
+        self.user_inner_buffer = queue.Queue()
 
         process_thread = threading.Thread(target = self.packet_process)
         process_thread.start()
         sender_thread = threading.Thread(target=self.packet_sender)
         sender_thread.start()
         self.server = server
+        self.server.connections[self.id]   = self
+        self.server.addr_id[(self.ip, self.port)] = id
         self.inner_channel = ISC(self)
-        self.inner_channel.send_msg(0, b'')
+        self.inner_channel.send_msg(0, self.id.to_bytes(4, byteorder='big'))
+        self.add_packet(global_id= 1, inner_id = 0, data = self.id.to_bytes(4, byteorder='big'), is_left=True)
 
 
     def packet_process(self):
@@ -382,6 +394,7 @@ class Server_Connection():
                         if global_id == 0:
                             self.inner_channel.put_packet(inner_id, data)
                         if global_id == 1:
+
                             message_id = int.from_bytes(data[:4], byteorder='big')
                             if message_id in self.inner_channel.waiting:
                                 self.inner_channel.waiting.remove(message_id)
@@ -391,11 +404,10 @@ class Server_Connection():
                         pass  ### To resend loss
                     if global_id == 4:
                         pass  ### Keep alive
-
-
                 last_con = time.time()
             time.sleep(1/100000)
             if time.time() - last_con > self.timeout:
+
                 self.close()
                 break
     def add_packet(self, global_id, inner_id, data, is_left = False):
@@ -427,8 +439,9 @@ class Server_Connection():
 
 
             else:
+
                 t += 2 * (1 / self.delay) * NSEC
-                self.send_packet(40,  b'')
+                #self.send_packet(40,  b'')
                 while time.time_ns() < t:
                     pass
 
@@ -437,16 +450,18 @@ class Server_Connection():
 
 class Server :
     def __init__(self,ip,port, handler, timeout = 4, buffersz = 1024*1024*10, ):
+
         soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         soc.settimeout(None)
         self.socket = soc
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, buffersz)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, buffersz)
         self.ip = ip
         self.port = port
         self.handler = handler
         self.timeout = timeout
         self.buffersz = buffersz
         self.socket.bind((self.ip, self.port))
-        self.socket.settimeout(timeout)
         self.connections = {}
         self.handler = handler
         self.is_alive = True
@@ -472,18 +487,14 @@ class Server :
             connection_id = int.from_bytes(data[1:5], byteorder='big')
             data = data[5:]
             if id == 0 and connection_id == 0 and addr not in self.addr_id :
-                print("Start New Connection", addr, id)
                 self.last_id += 1
+                print("Start New Connection", addr, self.last_id)
                 ip = addr[0]
                 port = addr[1]
-                new_connection = Server_Connection(self.socket, self.last_id, ip, port, raw_parametrs= data, server=self, timeout= self.timeout, buffersz= self.buffersz)
-                self.connections[self.last_id] = new_connection
-                self.addr_id[addr] = self.last_id
-                continue
-            if id == 0 and connection_id == 0 and addr in self.addr_id :
-                connection_id = self.addr_id[addr]
-                self.connections[connection_id].recieved_packets.put((id, data, addr))
+                t = threading.Thread(target = Server_Connection, args = (self.socket, self.last_id, ip, port, data, self, self.timeout,  self.buffersz))
+                t.start()
 
+                continue
             try:
                 self.connections[connection_id].recieved_packets.put((id, data, addr))
             except :
