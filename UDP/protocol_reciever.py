@@ -1,4 +1,4 @@
-from protocol_base import *
+from protocol_2_0 import *
 
 class Zero_Handler:
     def __init__(self, connection):
