@@ -214,16 +214,15 @@ class Connection():
                 self.send_packet(id_p, data)
                 while time.time_ns() < t:
                     pass
-                time.sleep(1/self.delay)
+
 
 
             else:
-                time.sleep(1 / self.delay)
-                pass
-                #t += 2 * (1 / self.delay) * NSEC
+
+                t += 2 * (1 / self.delay) * NSEC
                 #self.send_packet(40, b'')
-                #while time.time_ns() < t:
-                #    pass
+                while time.time_ns() < t:
+                    pass
 
 
     def packet_reciever(self):
@@ -326,7 +325,10 @@ class Inner_Server_Connection:
             num_packets = 1
         for i in range(num_packets):
             packet = msg[i*self.conn.psz:(i+1)*self.conn.psz]
-            self.send(id, packet, i, num_packets)
+            try:
+                self.send(id, packet, i, num_packets)
+            except:
+                pass
 
     def send(self, id, packet, message_num, total_num):
         self.last_sended_packet_id += 1
@@ -350,7 +352,7 @@ class Server_Connection():
         self.ip = ip
         self.id = id
         self.psz = 1280
-        self.delay = 1000
+        self.delay = 10000
         self.ping = 50
         self.frame = 2
         self.loss = 0
@@ -477,6 +479,14 @@ class Server :
             try:
                 data, addr = self.socket.recvfrom(1500)
             except socket.timeout:
+                continue
+            except ConnectionResetError:
+                continue
+            except ConnectionAbortedError:
+                continue
+            except ConnectionError:
+                continue
+            except ConnectionRefusedError:
                 continue
             data_hash = data[-4:]
             data = data[:-4]

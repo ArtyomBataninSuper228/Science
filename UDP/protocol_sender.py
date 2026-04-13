@@ -1,7 +1,7 @@
 from protocol_2_0 import *
 import binascii
 
-con = Connection('192.168.1.8', 55432, timeout=3)
+con = Connection('46.45.15.136', 55432, timeout=3)
 f = open('C:\\Users\\artyo\\Pictures\\Обои\\DSC03714.jpg', mode = 'rb')
 data = f.read()
 data = data[:1280*255]
