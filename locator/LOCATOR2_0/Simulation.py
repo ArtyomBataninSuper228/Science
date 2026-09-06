@@ -44,6 +44,7 @@ class Simulation:
         self.k = k
         self.c = c
         self.lmbda = c*(2**0.5*dt)/k
+        self.to_show = torch.zeros(shape, dtype=self.dtype, device="cpu")
         if(self.lmbda > 1):
             raise "dt is too large"
         if (shape != default.shape):
@@ -64,45 +65,50 @@ class Simulation:
             if self.toe != None and self.T >= self.toe:
                 break
 
-c = 343
-dt = 10**-4
-shape = (1000,1000)
-sim = Simulation(shape, c = c, dt = dt)
-sim.field[500][500] = 10
-for i in range(100):
-    for j in range(100):
-        sim.field[i+450][j+450] = 10*max(float(np.cos(((i-50)**2+ (j-50)**2)**0.5*torch.pi/100) > 0), 0)
-to_show = torch.zeros(shape, dtype = sim.dtype, device = "cpu")
-i = 0
-sim.set_max_dt()
-sim.toe = (500-50)/343
 
-'''
-sim.update()
-x = []
-y = []
-for i in range(500, 1000):
-    x.append(float(sim.field[i][500]))
-    y.append(i)
-plt.plot(y, x)
-plt.show()
+if __name__ == "__main__":
+    c = 343
+    dt = 10 ** -4
+    shape = (1000, 1000)
+    sim = Simulation(shape, c=c, dt=dt)
+    sim.field[500][500] = 10
+    for i in range(100):
+        for j in range(100):
+            sim.field[i + 450][j + 450] = 10 * max(
+                float(np.cos(((i - 50) ** 2 + (j - 50) ** 2) ** 0.5 * torch.pi / 100)), 0)
+    to_show = torch.zeros(shape, dtype=sim.dtype, device="cpu")
+    i = 0
+    sim.set_max_dt()
+    sim.toe = (500 - 50) / 343
+
+    '''
+    sim.update()
+    x = []
+    y = []
+    for i in range(500, 1000):
+        x.append(float(sim.field[i][500]))
+        y.append(i)
+    plt.plot(y, x)
+    plt.show()
 
 
-'''
-t = Thread(target = sim.update)
-t.start()
-while 1:
-    #sim.do_step()
-    to_show.copy_(sim.field)
-    mn = to_show.min()
-    mx = to_show.max()
-    show = ((to_show.cpu().numpy() - float(mn))*float(255/(mx-mn))).astype("uint8")
-    #show *= int((255/(show.max()-show.min())))
+    '''
+    t = Thread(target=sim.update)
+    t.start()
+    while 1:
+        # sim.do_step()
+        to_show.copy_(sim.field)
+        mn = to_show.min()
+        mx = to_show.max()
+        show = ((to_show.cpu().numpy() - float(mn)) * float(255 / (mx - mn))).astype("uint8")
+        # show *= int((255/(show.max()-show.min())))
+        cv.imshow("field", cv.resize(show, (2000, 2000), cv.INTER_LINEAR))
+        cv.waitKey(1)
+        # time.sleep(0.1)
+        # print(sim.T, float(sim.field[50][50] - sim.field[0][0]), show.max() - show.min())
 
-    cv.imshow("field", cv.resize(show, (1000, 1000), cv.INTER_CUBIC))
-    cv.waitKey(1)
-    #time.sleep(0.1)
-    #print(sim.T, float(sim.field[50][50] - sim.field[0][0]), show.max() - show.min())
+
+
 
 
 
