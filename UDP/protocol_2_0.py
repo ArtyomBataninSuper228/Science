@@ -6,6 +6,7 @@ import time
 import math
 from collections import deque
 
+from matplotlib.pyplot import connect
 
 
 class GlobalDataStream:
@@ -72,7 +73,7 @@ ID (Global id (0-9) + inner id (0-9)) ||| Connection ID  ||| packet_id ||| Num (
 
 
 class Inner_Client_Connection:
-    def __init__(self, conn:Connection):
+    def __init__(self, conn):
         self.buffer = GlobalDataStream()
         self.conn = conn
         self.packets = []
@@ -86,8 +87,8 @@ class Inner_Client_Connection:
         packet_id = int.from_bytes(data[2:6], byteorder='big')
 
         ack_pack = data[2:6]
-
-        self.conn.add_packet(global_id= 1, inner_id = 0, data = ack_pack, is_left=True)
+        self.conn.send_packet(10, ack_pack)
+        #self.conn.add_packet(global_id= 1, inner_id = 0, data = ack_pack, is_left=True)
         if packet_id <= self.last_recieved_id:
             return
         data = data[6:]
@@ -113,7 +114,7 @@ class Inner_Client_Connection:
             self.conn.is_started = True
             connection_id = int.from_bytes(message[:4], byteorder='big')
             self.conn.id = connection_id
-            print("Registered!", connection_id)
+            self.conn.event.set()
         elif id == 3:
             self.conn.user_inner_buffer.put(message)
 
@@ -136,7 +137,8 @@ class Inner_Client_Connection:
         event = threading.Event()
         self.waiting[my_id] = event
         for i in range(int(self.conn.timeout / 0.2)):
-            self.conn.add_packet(global_id=0, inner_id=id, data=packet, is_left=True)
+            self.conn.send_packet(id, packet)
+            #self.conn.add_packet(global_id=0, inner_id=id, data=packet, is_left=True)
             if event.wait(0.2):
                 self.waiting.pop(my_id)
                 return
@@ -159,7 +161,7 @@ class Connection():
         self.timeout = timeout
         self.buffersz = buffersz
         self.psz = 1280
-        self.delay = 10000
+        self.delay = 100000
         self.ping = 50
         self.frame = 2
         self.loss = 0
@@ -178,10 +180,15 @@ class Connection():
         reciever = threading.Thread(target=self.packet_reciever)
         reciever.start()
         self.user_inner_buffer = queue.Queue()
+        self.event = threading.Event()
 
         self.inner_channel = ICC(self)
 
-        self.inner_channel.send_msg(0, b'0')
+        for i in range(int(timeout/0.5)):
+            self.add_packet(0, 0, b"", True)
+            if self.event.wait(0.5):
+                return
+        raise ConnectionError
 
 
     def send_inner(self, msg):
@@ -208,10 +215,10 @@ class Connection():
         t = time.time_ns()
         NSEC = 10 ** 9
 
-        while self.is_alive:
+        while self.is_alive or len(self.packets_to_send) != 0:
             if len(self.packets_to_send) != 0:
                 id_p, data = self.packets_to_send.popleft()
-                #t += (1 / self.delay) * NSEC
+                t += (1 / self.delay) * NSEC
                 self.send_packet(id_p, data)
                 while time.time_ns() < t:
                     pass
@@ -219,11 +226,14 @@ class Connection():
 
 
             else:
+                time.sleep(1/10000)
 
-                t += 2 * (1 / self.delay) * NSEC
+                #t += 2 * (1 / self.delay) * NSEC
                 #self.send_packet(40, b'')
-                while time.time_ns() < t:
-                    pass
+                #while time.time_ns() < t:
+                #    pass
+        time.sleep(1/5)
+        self.socket.close()
 
 
     def packet_reciever(self):
@@ -257,8 +267,6 @@ class Connection():
                 pass ### Keep alive
     def close(self):
         self.is_alive = False
-        time.sleep(1/5)
-        self.socket.close()
 
 
 
@@ -276,7 +284,7 @@ ID (Global id (0-9) + inner id (0-9))  ||| packet_id ||| Num (0-256) ||| Total m
 
 
 class Inner_Server_Connection:
-    def __init__(self, conn:Server_Connection):
+    def __init__(self, conn):
         self.buffer = GlobalDataStream()
         self.conn = conn
         self.packets = []
@@ -292,8 +300,8 @@ class Inner_Server_Connection:
 
 
         ack_pack = data[2:6]
-
-        self.conn.add_packet(global_id= 1, inner_id = 0, data = ack_pack, is_left=True)
+        self.conn.send_packet(10, ack_pack)
+        #self.conn.add_packet(global_id= 1, inner_id = 0, data = ack_pack, is_left=True)
         if packet_id <= self.last_recieved_id:
             return
         data = data[6:]
@@ -339,7 +347,8 @@ class Inner_Server_Connection:
         event = threading.Event()
         self.waiting[my_id] = event
         for i in range(int(self.conn.timeout/0.2)):
-            self.conn.add_packet(global_id=0, inner_id=id, data=packet, is_left=True)
+            self.conn.send_packet(id, packet)
+            #self.conn.add_packet(global_id=0, inner_id=id, data=packet, is_left=True)
             if event.wait(0.2):
                 self.waiting.pop(my_id)
                 return
@@ -348,12 +357,12 @@ class Inner_Server_Connection:
 ISC = Inner_Server_Connection
 
 class Server_Connection():
-    def __init__(self,socket, id,  ip,port,  raw_parametrs, server:Server, timeout = 1, buffersz = 1024*1024*10):
+    def __init__(self,socket, id,  ip,port,  raw_parametrs, server, timeout = 10, buffersz = 1024*1024*10):
         self.socket = socket
         self.ip = ip
         self.id = id
         self.psz = 1280
-        self.delay = 10000
+        self.delay = 100000
         self.ping = 50
         self.frame = 2
         self.loss = 0
@@ -366,6 +375,7 @@ class Server_Connection():
         self.packets_to_send = deque()
         self.is_alive = True
         self.user_inner_buffer = queue.Queue()
+        self.recieved_packets_num = 0
 
         process_thread = threading.Thread(target = self.packet_process)
         process_thread.start()
@@ -384,6 +394,7 @@ class Server_Connection():
         while self.is_alive:
             if not self.recieved_packets.empty():
                 while not self.recieved_packets.empty():
+                    self.recieved_packets_num += 1
                     id, data, addr = self.recieved_packets.get()
                     if addr != (self.ip, self.port):
                         print(addr, self.ip, self.port)
@@ -443,17 +454,17 @@ class Server_Connection():
 
 
             else:
-
-                t += 2 * (1 / self.delay) * NSEC
-                #self.send_packet(40,  b'')
-                while time.time_ns() < t:
-                    pass
+                time.sleep(1/10000)
+                #t += 2 * (1 / self.delay) * NSEC
+                ##self.send_packet(40,  b'')
+                #while time.time_ns() < t:
+                #    pass
 
 
 
 
 class Server :
-    def __init__(self,ip,port, handler, timeout = 4, buffersz = 1024*1024*10, ):
+    def __init__(self,ip,port, handler, timeout = 10, buffersz = 1024*1024*10, ):
 
         soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         soc.settimeout(None)
@@ -476,10 +487,12 @@ class Server :
 
 
     def packet_reciever(self):
+        buff = bytearray(1500)
+
         while self.is_alive:
-            self.socket.settimeout(1 / 10)
+            self.socket.settimeout(1)
             try:
-                data, addr = self.socket.recvfrom(1500)
+                len, addr = self.socket.recvfrom_into(buff, 1500)
             except socket.timeout:
                 continue
             except ConnectionResetError:
@@ -490,6 +503,8 @@ class Server :
                 continue
             except ConnectionRefusedError:
                 continue
+            mv = memoryview(buff)
+            data = mv[:len]
             data_hash = data[-4:]
             data = data[:-4]
             if binascii.crc32(data).to_bytes(4, 'big') != data_hash:
@@ -508,7 +523,9 @@ class Server :
 
                 continue
             try:
-                self.connections[connection_id].recieved_packets.put((id, data, addr))
+
+                self.connections[connection_id].recieved_packets.put((id, bytes(data), addr))
+
             except :
                 pass
 

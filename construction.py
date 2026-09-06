@@ -16,7 +16,7 @@ W = 800
 H = 600
 DOTS = []
 FITTINGS = []
-dt = 10**(-4)
+dt = 10**(-5)
 g = 9.8
 T = 0
 class Dot:
@@ -36,7 +36,7 @@ class Dot:
 
 
 class Fitting:
-    def __init__(self, dot1, dot2, k = 1000000):
+    def __init__(self, dot1, dot2, k = 100):
         self.dot1 = DOTS[dot1.index]
         self.dot2 = DOTS[dot2.index]
         self.l0 = length(self.dot1[0:2] - self.dot2[0:2])

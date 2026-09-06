@@ -6,4 +6,4 @@ class Zero_Handler:
         time.sleep(1)
         connection.is_alive = 0
 
-server = Server('192.168.1.8', 55432, Zero_Handler)
+server = Server('127.0.0.1', 55432, Zero_Handler)
