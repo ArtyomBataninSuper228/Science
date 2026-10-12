@@ -1,13 +1,10 @@
 
 import copy
-import modulefinder
 import time
 from math import *
 import dearpygui.dearpygui as dpg
 import math
 import numpy
-import soundfile
-import rawpy
 from matplotlib import pyplot as plt
 import torch
 
@@ -248,18 +245,17 @@ def do_my4_1_step(sys, dif, step, h):
     sys = step(sys, h, k)
     return sys
 
-def do_my4_2_step(sys, dif, step, h):
+def do_my4_2_step(sys, dif, h):
     sys2 = copy.copy(sys)
     k1 = dif(sys2)
-    sys2 = step(sys2, h / 2, k1)
+    sys2 = sys2 + h/2*k1#step(sys2, h / 2, k1)
     k2 = dif(sys2)
-    sys2 = step(sys2, h / 2, k2)
+    sys2 = sys2 + h/2*k2#step(sys2, h / 2, k2)
     k3 = dif(sys2)
-    sys2 = step(sys2, h/2, k3)
+    sys2 = sys2 + h/2*k3#step(sys2, h/2, k3)
     k4 = dif(sys2)
     k = (k4 - k3  + k2 * 2 + k1) / 3
-    sys = step(sys, h, k)
-    return sys
+    return k
 
 def do_my4_3_step(sys, dif, step, h):
     sys2 = copy.copy(sys)
@@ -291,7 +287,7 @@ def get_length(vector):# Возвращает длину n мерного век
 def test_sys(sys, fd, fs, k, h):# функция ошибки при подборе значения f'(x+h) для решения уравнения f(x+h) = f(x) + hf'(x+h)
     sys2 = fs(copy.copy(sys), h, k)
     delta =  fd(sys2) - k
-    return get_length(delta)
+    return numpy.linalg.norm(delta)
 def seek_solution_1d(sys, fd, fs, h):# функция подбирает значение f'(x+h) что бы минимизировать ошибку при решении уравнения f(x+h) = f(x) + hf'(x+h)
     st_sys = copy.copy(sys)
     k1 = fd(sys)
@@ -412,7 +408,7 @@ def fourie_torch(data_tensor, dx, max_f = None, minf = 0):
     for i in range(N):
         base_tensor[i] = 2*pi*i*dx
 
-    for i in range(NF):
+    for i in range(1, NF):
         F = min_f*(i)+minf
         torch.sin(base_tensor*F, out = sintensor)
         torch.cos(base_tensor*F, out = costensor)
@@ -429,4 +425,29 @@ def fourie_torch(data_tensor, dx, max_f = None, minf = 0):
         msin[i] = S
         mcos[i] = C
     return(mf, mA, msin, mcos)
+
+def get_grad(f, pred, res, dx):
+    probe = copy.copy(res)
+    probe.fill(0)
+
+    a = numpy.linalg.norm(f(pred))
+    for i in range(0, len(pred)):
+        probe[i] = dx
+        a1 = numpy.linalg.norm(f(pred+probe))
+        a2 = numpy.linalg.norm(f(pred-probe))
+        df_di = (a1-a2)/(2*dx)
+        res[i] = df_di
+        probe[i] = 0
+def get_sol(f, sys, pred, dx):
+    func =  lambda p: p - f(sys+p)
+    for i in range(2):
+        grad = numpy.zeros(len(pred), dtype = numpy.float64)
+        get_grad(func, pred, grad, dx)
+        pred-=grad*(func(pred)/numpy.linalg.norm(grad)/2)
+def new_backward_step(sys, f, dt):
+    pred = f(sys)
+    get_sol(f, sys, pred, dt)
+    sys += pred*dt
+    return sys
+
 

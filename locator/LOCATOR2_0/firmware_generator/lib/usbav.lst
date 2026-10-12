@@ -1,0 +1,136 @@
+ASxxxx Assembler V05.50.4+NoICE+SDCCmods-WIP-R14  (Intel 8051)          Page 1
+Hexadecimal [24-Bits]
+
+
+
+                                      1 ; Copyright (C) 2010 Ubixum, Inc. 
+                                      2 ;
+                                      3 ; This library is free software; you can redistribute it and/or
+                                      4 ; modify it under the terms of the GNU Lesser General Public
+                                      5 ; License as published by the Free Software Foundation; either
+                                      6 ; version 2.1 of the License, or (at your option) any later version.
+                                      7 ; 
+                                      8 ; This library is distributed in the hope that it will be useful,
+                                      9 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
+                                     10 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+                                     11 ; Lesser General Public License for more details.
+                                     12 ; 
+                                     13 ; You should have received a copy of the GNU Lesser General Public
+                                     14 ; License along with this library; if not, write to the Free Software
+                                     15 ; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+                                     16 
+                                     17 .module INT2AV ; jump table for usb auto vector
+                                     18 
+                                     19 ; INT2 Jump Table
+                                     20 .globl _usb_isr  ; define jump target for interrupt 8 (USB)
+                                     21 .globl _gpif_isr ; define jump target for interrupt 10 (GPIF)
+                                     22 
+                                     23 .area INT2JT ( CODE )
+                                     24 ;.org    0x1A00 ; needs to be on a page boundary
+                                     25 
+      000000                         26 _gpif_isr:
+      000000                         27 _usb_isr:
+      000000 02 00 00         [24]   28     ljmp _sudav_isr
+      000003 00                      29     .db 0
+      000004 02 00 00         [24]   30     ljmp _sof_isr
+      000007 00                      31     .db 0
+      000008 02 00 00         [24]   32     ljmp _sutok_isr
+      00000B 00                      33     .db 0
+      00000C 02 00 00         [24]   34     ljmp _suspend_isr
+      00000F 00                      35     .db 0
+      000010 02 00 00         [24]   36     ljmp _usbreset_isr
+      000013 00                      37     .db 0
+      000014 02 00 00         [24]   38     ljmp _hispeed_isr
+      000017 00                      39     .db 0
+      000018 02 00 00         [24]   40     ljmp _ep0ack_isr
+      00001B 00                      41     .db 0
+      00001C 02 00 00         [24]   42     ljmp _spare_isr
+      00001F 00                      43     .db 0
+      000020 02 00 00         [24]   44     ljmp _ep0in_isr
+      000023 00                      45     .db 0
+      000024 02 00 00         [24]   46     ljmp _ep0out_isr
+      000027 00                      47     .db 0
+      000028 02 00 00         [24]   48     ljmp _ep1in_isr
+      00002B 00                      49     .db 0
+      00002C 02 00 00         [24]   50     ljmp _ep1out_isr
+      00002F 00                      51     .db 0
+      000030 02 00 00         [24]   52     ljmp _ep2_isr
+      000033 00                      53     .db 0
+      000034 02 00 00         [24]   54     ljmp _ep4_isr
+      000037 00                      55     .db 0
+ASxxxx Assembler V05.50.4+NoICE+SDCCmods-WIP-R14  (Intel 8051)          Page 2
+Hexadecimal [24-Bits]
+
+
+
+      000038 02 00 00         [24]   56     ljmp _ep6_isr
+      00003B 00                      57     .db 0
+      00003C 02 00 00         [24]   58     ljmp _ep8_isr
+      00003F 00                      59     .db 0
+      000040 02 00 00         [24]   60     ljmp _ibn_isr
+      000043 00                      61     .db 0
+      000044 02 00 00         [24]   62     ljmp _spare_isr
+      000047 00                      63     .db 0
+      000048 02 00 00         [24]   64     ljmp _ep0ping_isr
+      00004B 00                      65     .db 0
+      00004C 02 00 00         [24]   66     ljmp _ep1ping_isr
+      00004F 00                      67     .db 0
+      000050 02 00 00         [24]   68     ljmp _ep2ping_isr
+      000053 00                      69     .db 0
+      000054 02 00 00         [24]   70     ljmp _ep4ping_isr
+      000057 00                      71     .db 0
+      000058 02 00 00         [24]   72     ljmp _ep6ping_isr
+      00005B 00                      73     .db 0
+      00005C 02 00 00         [24]   74     ljmp _ep8ping_isr
+      00005F 00                      75     .db 0
+      000060 02 00 00         [24]   76     ljmp _errlimit_isr
+      000063 00                      77     .db 0
+      000064 02 00 00         [24]   78     ljmp _spare_isr
+      000067 00                      79     .db 0
+      000068 02 00 00         [24]   80     ljmp _spare_isr
+      00006B 00                      81     .db 0
+      00006C 02 00 00         [24]   82     ljmp _spare_isr
+      00006F 00                      83     .db 0
+      000070 02 00 00         [24]   84     ljmp _ep2isoerr_isr
+      000073 00                      85     .db 0
+      000074 02 00 00         [24]   86     ljmp _ep4isoerr_isr
+      000077 00                      87     .db 0
+      000078 02 00 00         [24]   88     ljmp _ep6isoerr_isr
+      00007B 00                      89     .db 0
+      00007C 02 00 00         [24]   90     ljmp _ep8isoerr_isr
+      00007F 00                      91     .db 0
+                                     92 ; INT4JT
+      000080 02 00 00         [24]   93     ljmp _ep2pf_isr
+      000083 00                      94     .db 0
+      000084 02 00 00         [24]   95     ljmp _ep4pf_isr
+      000087 00                      96     .db 0
+      000088 02 00 00         [24]   97     ljmp _ep6pf_isr
+      00008B 00                      98     .db 0
+      00008C 02 00 00         [24]   99     ljmp _ep8pf_isr
+      00008F 00                     100     .db 0
+      000090 02 00 00         [24]  101     ljmp _ep2ef_isr
+      000093 00                     102     .db 0
+      000094 02 00 00         [24]  103     ljmp _ep4ef_isr
+      000097 00                     104     .db 0
+      000098 02 00 00         [24]  105     ljmp _ep6ef_isr
+      00009B 00                     106     .db 0
+      00009C 02 00 00         [24]  107     ljmp _ep8ef_isr
+      00009F 00                     108     .db 0
+      0000A0 02 00 00         [24]  109     ljmp _ep2ff_isr
+      0000A3 00                     110     .db 0
+ASxxxx Assembler V05.50.4+NoICE+SDCCmods-WIP-R14  (Intel 8051)          Page 3
+Hexadecimal [24-Bits]
+
+
+
+      0000A4 02 00 00         [24]  111     ljmp _ep4ff_isr
+      0000A7 00                     112     .db 0
+      0000A8 02 00 00         [24]  113     ljmp _ep6ff_isr
+      0000AB 00                     114     .db 0
+      0000AC 02 00 00         [24]  115     ljmp _ep8ff_isr
+      0000AF 00                     116     .db 0
+      0000B0 02 00 00         [24]  117     ljmp _gpifdone_isr
+      0000B3 00                     118     .db 0
+      0000B4 02 00 00         [24]  119     ljmp _gpifwf_isr
+      0000B7 00                     120     .db 0
+                                    121     

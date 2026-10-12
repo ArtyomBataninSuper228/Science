@@ -70,13 +70,13 @@ if __name__ == "__main__":
     c = 343
     dt = 10 ** -4
     shape = (1000, 1000)
-    sim = Simulation(shape, c=c, dt=dt)
+    sim = Simulation(shape, c=c, dt=dt)#, device = torch.device("cpu"))
     sim.field[500][500] = 10
     for i in range(100):
         for j in range(100):
-            sim.field[i + 450][j + 450] = 10 * max(
-                float(np.cos(((i - 50) ** 2 + (j - 50) ** 2) ** 0.5 * torch.pi / 100)), 0)
-    to_show = torch.zeros(shape, dtype=sim.dtype, device="cpu")
+            if((i-50)**2 + (j-50)**2) <= 50**2:
+                sim.field[i+450][j+450] = 10
+    to_show = torch.zeros(shape, dtype=sim.dtype)
     i = 0
     sim.set_max_dt()
     sim.toe = (500 - 50) / 343
@@ -104,7 +104,7 @@ if __name__ == "__main__":
         # show *= int((255/(show.max()-show.min())))
         cv.imshow("field", cv.resize(show, (2000, 2000), cv.INTER_LINEAR))
         cv.waitKey(1)
-        # time.sleep(0.1)
+        time.sleep(0.1)
         # print(sim.T, float(sim.field[50][50] - sim.field[0][0]), show.max() - show.min())
 
 
