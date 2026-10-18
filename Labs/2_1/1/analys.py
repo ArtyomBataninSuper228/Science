@@ -29,9 +29,11 @@ for i in range(2, len(data)):
     line = data[i]
     line[4] = line[0]/line[-1]*1000
 data[1][2] = data[1][1]*0.0003+4*10**-3
-data[2][2] = 0.25
-data[3][2] = 0.1
-data[4][2] = 0.005
+data[2][2] = 0.25 + data[2][0]*0.002
+data[3][2] = 0.1 + data[3][0]*0.002
+data[4][2] = 0.005 + data[4][0]*0.002
+
+
 
 for i in range(1, len(data)):
     r1 = 1/(1/R1 + 1/data[i][4])

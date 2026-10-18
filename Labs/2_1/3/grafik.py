@@ -12,7 +12,7 @@ for line in f:
     if X > 500:
         x.append(X)
         y.append(log(Y))
-        y_err.append(log(Y + 2/sqrt(12)) - log(Y))
+        y_err.append(log(Y + 0.5/sqrt(12)) - log(Y))
 
 
 
@@ -71,6 +71,7 @@ while 1:
         break
 
 print(x_min, delta, 1/d3_Xi_2(x_min))
+print(f"Минимум функции: {x_min}, delta: {delta}, 1/d3: {1/d3_Xi_2(x_min)}, Xi_2: {f(x_min)}")
 print(x_min*10**11)
 for i in range(len(x)):
     t = x[i]

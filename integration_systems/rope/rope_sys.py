@@ -2,12 +2,14 @@ from numpy import *
 
 g = [0, -9.8, 0]
 
-def do_system(l,n, k,dim = 3):
+def do_system(l,n, k,dim = 3, def_pos = (0,0,0)):
+    def_pos = array(def_pos)
     pos = zeros((n+1, dim), dtype=float64)
     speeds = zeros((n+1, dim), dtype=float64)
     pos[0] = (k, l/n, 0)
     for i in range(1,n+1):
-        pos[i, 0] = i*l/n
+        pos[i] = def_pos
+        pos[i, 1] = -i*l/n
     return array([pos, speeds])
 def get_diff(sys):
     lo = sys[0][0][1]
