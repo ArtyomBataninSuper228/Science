@@ -1,3 +1,5 @@
+import time
+
 import usb.core
 import usb.util
 import sys
@@ -44,10 +46,19 @@ except usb.core.USBError:
 
 # Выполняем чтение
 try:
-    print("Ожидание данных от ПЛИС...")
-    data = ep_in.read(512, timeout=2000)
-    print(f"Успешно прочитано {len(data)} байт!")
-    print("Данные:", list(data[:10]))
+    while 1:
+        t1 = time.time()
+        for i in range(10000):
+            # print("Ожидание данных от ПЛИС...")
+            data = ep_in.read(512, timeout=200000)
+            if(len(data) != 0):
+                print(data, len(data))
+
+            # print(f"Успешно прочитано {len(data)} байт!")
+            # print("Данные:", list(data[:10]))
+        t2 = time.time()
+        print(len(data) * 10000 / (t2 - t1) / 1000000, len(data))
+
 except usb.core.USBError as e:
     print(f"Статус чтения: {e}")
 finally:

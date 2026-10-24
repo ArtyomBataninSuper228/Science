@@ -38,7 +38,7 @@ static void Initialize(void)
     REVCTL = 0x03;    SYNCDELAY;  // See TRM...
 
     // Configure EP6 (IN) for bulk input, quad-buffered (4*512 bytes).
-    EP6CFG = 0xe0;  SYNCDELAY;
+    EP6CFG = 0xE0;  SYNCDELAY; //11100000
     // Configure EP2 (OUT) for bulk output, double-buffered (2*512 bytes).
     EP2CFG = 0xA2; SYNCDELAY; //10100010
 
@@ -55,8 +55,8 @@ static void Initialize(void)
 
 
     // Configure EP6 for AUTOIN, 8bit wide bus, EP2 for AUTOOUT 8 bit wide.
-    EP6FIFOCFG = 0xC;  SYNCDELAY; //
-    EP2FIFOCFG = 0x30; SYNCDELAY; //
+    EP6FIFOCFG = 0xC;  SYNCDELAY; //00001100  00001100
+    EP2FIFOCFG = 0x14; SYNCDELAY; //00010100
 
 
     // PORTACFG: FLAGD SLCS(*) 0 0 0 0 INT1 INT0

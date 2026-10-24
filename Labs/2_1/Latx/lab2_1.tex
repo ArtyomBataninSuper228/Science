@@ -4,6 +4,7 @@
 \usepackage{graphicx} 
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{siunitx}% Для погрешностей
 \usepackage{float}
 \usepackage[colorlinks=true, linkcolor=blue]{hyperref}
 \usepackage{enumitem}
@@ -46,38 +47,219 @@
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=1\linewidth]{schema1.png}
+\includegraphics[width=0.5\linewidth]{schema1.png}
 \label{fig:schema1}
-\
+\caption{Схема измерения напряжения:
+Б-47 - источник питания постоянного тока;
+$R_1$, $R_2$ - делитель напряжения ($R1 \approx R2 \approx 15\cdot10^5 $);
+$V_1$ - вольтметр магнитоэлектрической системы
+$V_2$ - мультиметр GDM-8145;
+K - переключатель}
+\end{figure}
+
+\subsection {Оценка неопределённости измерений}
+Неопределённость измерений рассчитывалась согласно классу точности прибора и цене деления шкалы:
+\begin{equation}
+\begin{aligned}
+ \Delta U  = k_{\text{точности}} \cdot U_{\text{Шкалы}} + \frac{\delta U}{2}\\
+  \Delta R  = k_{\text{точности}} \cdot R_{\text{Шкалы}} + \frac{\delta R}{2}
+ \label{neopr}
+ \end{aligned}
+\end{equation}
+
+\subsection {Рассчет значений}
+\begin{equation}
+\begin{aligned}
+R_{2+v}  = \frac{1}{\frac{1}{R_2} + \frac{1}{R_v}}\\
+ U_{\text{рассч}}  = U_0 \cdot \frac{R_{2+v}}{R_{2+v} + R_1}
+ \label{rast}
+ \end{aligned}
+\end{equation}
+
+
+\subsection {Проведение измерений и результаты}
+
+Все измерерния проводились при $U_0 = 12$ В. 
+
+Сначала были выполнены измерения $R_1$ и $R_2$:
+
+$R_1 = \num{148.74 \pm 0.04}$ кОм
+
+$R_2 = \num{152.84 \pm 0.04}$ кОм
+
+
+
+\begin{table}[htbp]
+  \centering
+  \caption{Таблица показаний вольтметров}
+  \label{tab:my_label}
+  \begin{tabular}{|c|c|c|c|c|c|c|c|}
+    \hline
+    Вольтметр & Шкала, В & U, В & $\Delta U$, В & $U_{\text{расч}}, B$  & $R_v$, Ом & \multicolumn{2}{|c|}{U, В при параллельном соединении}    \\ \hline
+    GDM & 20 & 5.89 & 0.006 & 5.87 & $10^7$ & M2044 & GDM \\ \hline
+    M2044 & 75  & 5 & 0.15 & 5.14 & $5\cdot 10^5$ & 5.05 & 5.13\\ \hline
+    M2044 & 30 & 2.4 & 0.06 & 2.36 & $5\cdot 10^4$ & 2.4 & 2.38 \\ \hline
+    M2044 & 15 & 2.4 & 0.03 & 2.36 & $5\cdot 10^4$ & 2.4 & 2.38 \\ \hline
+
+  \end{tabular}
+\end{table}
+
+\section {Задание 2. Изучение влияния амперметра на режим
+работы электрической цепи постоянного тока}
+Оборудование: амперметр – цифровой мультиметр DT838 (или
+аналогичный); источник питания постоянного тока Б5-47; панель с
+сопротивлением R 10 Ом.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\linewidth]{schema2.png}
+\label{fig:schema2}
+\caption{Схема измерения тока}
 \end{figure}
 
 
 \begin{table}[htbp]
   \centering
-  \caption{Пример простой таблицы}
+  \caption{Таблица показаний амперметров}
   \label{tab:my_label}
-  \begin{tabular}{|c|c|c|c|c|c|c|c|}
+  \begin{tabular}{|c|c|c|c|c|c|}
     \hline
-    Вольтметр & Шкала, В & U, В & dU, В & $U_{0}, B$  & $R_v$, Ом & \multicolumn{2}{|c|}{U, В при параллельном соединении}    \\ \hline
-    GDM & 20 & 0 & 0 & 0 & 0 & M2044 & GDM \\ \hline
-    M2044 & 75 & 0 & 0 & 0 & 0 & 0 & 0 \\ \hline
-    M2044 & 30 & 0 & 0 & 0 & 0 & 0 & 0 \\ \hline
-    M2044 & 15 & 0 & 0 & 0 & 0 & 0 & 0 \\ \hline
+    Предел мА  & $I_{\text{эксп}}$, мА & $\Delta I$, мА & $R_A$, Ом & $I_P$, мА с учетом $R_A$  & $I_p$, мА без учёта $R_A$   \\ \hline
+    200  & 7.2 & 0.06 & 4 & 7.14 & 10 \\ \hline
+    20 & 4.19  & 0.07 & 13.6 & 4.26 & 10\\ \hline
+    2 & 0.81 & 0.00 & 113 & 0.81 & 10  \\ \hline
+
 
   \end{tabular}
 \end{table}
 
+\section{Задание 3. Определение сопротивления электростатического вольтметра}
+
+\begin{equation}
+\begin{aligned}
+U  = U_0\cdot e^{-\frac{t}{RC}} \\
+ \label{exp}
+ \end{aligned}
+\end{equation}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.8\linewidth]{full_data.png}
+\includegraphics[width=0.8\linewidth]{data_approx.png}
+\label{fig:FullData}
+\caption{Полная выборка данных и частичная с аппроксимацией}
+\end{figure}
+
+В первые 500с наблюдалось перераспределение зарядов по корпусу.
+Далее рассматриваются выборки сделанные после 500с. 
+
+Из выборок методом наименьших квадратов была получена оценка для углового коэффициента: 
+$CR= \num{12543\pm 93 \pm 62}$ Ф$ \cdot $Ом - с учётом статистической и систематической
+ неопределённости
+
+С учётом ёмкости вольтметра С50 (10 пФ) его входное сопротивление: $R= \num{12.543\pm 0.093 \pm 0.062} \cdot 10^{14}$ Ом
+
+
+$\chi^2 =  46.3$
+
+$\text{p-value} = 58$ \%
+
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\linewidth]{Xi_2.png}
+\label{fig:Xi}
+\caption{$\chi^2$}
+\end{figure}
 
 
 
 
 
-\newpage 
+\section{Задание 4. Определение ЭДС и внутреннего сопротивления источника}
 
-\section{Графики и результаты}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\linewidth]{4.png}
+\label{fig:schema4}
+\end{figure}
 
 
 
+
+\begin{table}[htbp]
+  \centering
+  \caption{Таблица показаний вольтметров}
+  \label{tab:my_label}
+  \begin{tabular}{|c|c|c|c|c|c|}
+    \hline
+    Вольтметр  & Предел шкалы & U, В & $\Delta U$ & $U_{\text{расч}}$ & $R_v$   \\ \hline
+    GDM  & 200    & 66.44 & 0.06 & 66.43 & $10^7$ \\ \hline
+    M2044 & 150  & 48.49   & 0.3 & 48.49 & $\cdot10^6$\\ \hline
+    M2044 & 75  & 37.5    & 0.15 & 37.3 & $\cdot10^6$  \\ \hline
+
+
+
+  \end{tabular}
+\end{table}
+
+%428612.3853211001 69.28770068807329
+%-9.5367431640625e-07 -5.960464477539063e-08
+%415094.3396226419 68.63207547169829
+%1.4901161193847656e-07 7.078051567077637e-08
+%Вольтметр       Предел шкалы    U               dU              U_расч          R_v             I, ма           
+%GDM             200             66.44           0.06            66.43           10000000        0               
+%M2044           150             48.5            0.3             48.49           1000000.0       0.15            
+%M2044           75              37.5            0.15            37.3            500000.0        0.15    
+
+решая систуму лин. уравнений получается:
+$E = \num{66\pm 1} $ В
+
+$r = \num{428\pm 9} $ $\cdot 10^{3}$ Ом
+
+%Вольтметр       Предел шкалы    U               dU              U_расч          R_v             I, ма           
+%GDM             20              47.03           0.49            47.02           10000000        0               
+%M2044           75              25.5            0.25            25.5            500000.0        0.15            
+%M2044           30              3.4             0.12            4.78            50000.0         0.6             
+%M2044           15              2.5             0.1             4.78            50000.0         0.3  
+
+
+\section{Задание 5. Изучение работы стабилизированного источника питания постоянного тока в режимах стабилизации тока и стабилизации напряжения}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\linewidth]{schema5.png}
+\label{fig:I_R}
+\caption{Схема для изучения режимов работы источника}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\linewidth]{I_R.png}
+\label{fig:I_R}
+\caption{Зависимость силы тока от сопротивления}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\linewidth]{U_R.png}
+\label{fig:U_R}
+\caption{Зависимость напряжения от сопротивления}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\linewidth]{P_R.png}
+\label{fig:P_R}
+\caption{Зависимость мощности от сопротивления}
+\end{figure}
+
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\linewidth]{R0_R.png}
+\label{fig:R0_R}
+\caption{Рассчётное сопротивление и сопротивление по показателям делителя}
+\end{figure}
 
 
 \end{document}

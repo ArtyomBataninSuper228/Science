@@ -25,7 +25,7 @@ N = 10000
 N_otbr = 10000
 x = 0
 t = 0
-trig_mode = 3
+trig_mode = 2
 data= np.zeros(N, dtype=np.float64)
 rng = np.arange(N)
 ons = np.ones(N, dtype=np.float64)
@@ -95,7 +95,7 @@ dpg.bind_font("Default25")
 
 dpg.create_viewport(title='Oscilloscope', width=1500, height=900)
 
-with dpg.window(label="Lamp", width=1500, height=900, no_move=True, no_close=True, no_resize=True, no_collapse=True):
+with dpg.window(label="Oscilloscope", width=1500, height=900, no_move=True, no_close=True, no_resize=True, no_collapse=True):
 
     with dpg.plot(label="Line Series", height=500, width=1200, pos = (50, 50)):
         # optionally create legend
