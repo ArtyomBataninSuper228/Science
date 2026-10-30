@@ -44,4 +44,4 @@ def load_firmware(filename):
     dev.ctrl_transfer(0x40, 0xA0, 0xE600, 0, b'\x00')
 
 if __name__ == "__main__":
-    load_firmware("fifo.ihx")
+    load_firmware("fifo2.ihx")
