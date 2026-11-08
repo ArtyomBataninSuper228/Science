@@ -384,7 +384,7 @@ def dispersion(M):
     med = median(M)
     for i in range(0, len(M)):
         dispersion += (M[i] - med)**2
-    return dispersion/len(M)
+    return dispersion/(len(M)-1)
 
 def fourie_torch(data_tensor, dx, max_f = None, minf = 0):
     data_tensor-= data_tensor.min()
@@ -449,5 +449,45 @@ def new_backward_step(sys, f, dt):
     get_sol(f, sys, pred, dt)
     sys += pred*dt
     return sys
+
+
+def div(f, x, dx):
+    res = numpy.zeros(x.shape)
+    dx = 1
+    for i in range(x.shape[0]):
+        x[i] -= dx
+        ax = x.copy()
+        a = numpy.linalg.norm(f(x))
+        x[i] += 2*dx
+        b = numpy.linalg.norm(f(x))
+        xb = x.copy()
+        x[i] -= dx
+        print(ax-xb, b-a, ax)
+        res[i] = (b-a)/(2*dx)
+    return res
+
+
+
+def get_min_Xi_2(Xi_2, dot, dx, end = 16):
+    dXi_2 = lambda x: div(Xi_2, dot, dx)
+    ddXi_2 = lambda x: div(dXi_2, dot, dx)
+    k = 1
+    mn = 10**10
+    print(ddXi_2(dot*2), dXi_2(numpy.array([0,0])))
+    time.sleep(1000)
+
+    while k < 2**end:
+        ddot = dXi_2(dot)/ddXi_2(dot)/k
+        new_m = numpy.linalg.norm(dXi_2(dot + ddot))
+        if new_m < mn and new_m != 0:
+            mn = new_m
+            dot += ddot
+        else:
+            k *=2
+
+
+
+    return dot
+
 
 

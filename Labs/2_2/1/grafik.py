@@ -10,14 +10,14 @@ for line in f:
     F.append(fr)#log(fr, 10))
     U1.append(u1)
     U2.append(u2)
-plt.plot(F, U1, label = "DT838")
+plt.plot(F, U1, label = "DT838" , linestyle='dashed')
 plt.plot(F, U2, label = "GDM")
 plt.xscale('log')
 plt.xlabel('Частота, Гц')
 plt.ylabel('Измеренное напряжение, В')
 plt.grid(True, which="both", ls="-")
 plt.legend()
-#plt.show()
+plt.savefig("gr1", dpi = 600)
 for i in range(len(F)):
     f = round(F[i])
     if f>10000:
