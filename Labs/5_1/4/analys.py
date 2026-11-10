@@ -44,11 +44,12 @@ dV = median(V)*dV
 print(f"dv: {dV}, phi: {median(PHI)}, dphi: {dphi*median(PHI)}")
 
 
-plt.errorbar(N, X, fmt = 'o')
-plt.plot(N, Y, 's')
+plt.errorbar(N, X, fmt = 'o',color = "b")
+plt.errorbar(N, Y, fmt = 's', color = "r")
 plt.legend(['Измерение сдвига по оси x', 'Измерение сдвига по оси y'])
 plt.ylim(0, max(max(X), max(Y))*1.2)
 plt.grid()
 plt.xlabel("Номер измерения")
 plt.ylabel("Сдвиг, рад")
+plt.savefig("phase_shift.png", dpi = 600)
 #plt.show()

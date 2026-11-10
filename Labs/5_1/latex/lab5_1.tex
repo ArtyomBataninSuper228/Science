@@ -14,7 +14,16 @@
 \renewcommand{\floatpagefraction}{0.99}
 \renewcommand{\topfraction}{0.99}      
 
+% Подключаем пакет для управления колонтитулами
+\usepackage{scrlayer-scrpage}
+\pagestyle{scrheadings}
 
+%\clearpagemainheadfoot % Очищаем стандартные колонтитулы
+\cfoot{\thepage}
+% Настраиваем верхний правый угол (Right Head)
+\rofoot{\includegraphics[width=2.5cm]{Mir_insignia.png}}
+% Вместо \rohead можно использовать:
+% \lehead (левый верхний), \rofoot (правый нижний), \lefoot (левый нижний)
 
 \title{ ЛАБОРАТОРНАЯ РАБОТА №5.1.
 
@@ -50,13 +59,20 @@
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.4\linewidth]{bl.png}
-\includegraphics[width=0.4\linewidth]{d.png}
-\includegraphics[width=0.4\linewidth]{blr.png}
-\includegraphics[width=0.4\linewidth]{dr.png}
+\includegraphics[width=1.2\linewidth]{grafix.png}
 \caption{Зависимость амплитуды от расстоянии в ближней/дальней зоне}
 \label{fig:gr1}
 \end{figure}
+
+%\begin{figure}[H]
+%\centering
+%\includegraphics[width=0.49\linewidth]{bl.png}
+%\includegraphics[width=0.49\linewidth]{d.png}
+%\includegraphics[width=0.49\linewidth]{blr.png}
+%\includegraphics[width=0.49\linewidth]{dr.png}
+%\caption{Зависимость амплитуды от расстоянии в ближней/дальней зоне}
+%\label{fig:gr1}
+%\end{figure}
 
 Периодичность в ближней зоне объясняется интерференцией звука между излучателем и приёмником. Максимум достигается тогда, когда расстояние между излучателем и приёмником кратно длине волны звука, минимум, когда они сдвинуты на половину периода. Сигнал в ближней зоне не затухает как $\frac{1}{R^2}$ из-за того, что излучатель и приёмник - не точечные, а протяженные объекты, пренебрегать их размерами в ближней зоне нельзя.
 
@@ -133,7 +149,7 @@ $C \approx 20.1 \sqrt{T}$ (T в кельвинах)
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.8\linewidth]{phase_shift.png}
+\includegraphics[width=1\linewidth]{phase_shift.png}
 \caption{Сдвиг фаз}
 \label{fig:gr2}
 \end{figure}
@@ -156,7 +172,7 @@ $C \approx 20.1 \sqrt{T}$ (T в кельвинах)
 
 
 
-
+\newpage
 \section{Результаты измерений}
 
 
