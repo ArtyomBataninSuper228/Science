@@ -491,3 +491,25 @@ def get_min_Xi_2(Xi_2, dot, dx, end = 16):
 
 
 
+def normal_disp(x, m, sigma):
+    return 1/((2*pi)**0.5 * sigma) * exp(-1/2*(((x-m))/sigma)**2)
+
+
+def split_to_columns(M, n = 20):
+    M = copy.copy(M)
+    M.sort()# сортировка массива в порядок элементов по возрастанию
+    colums = []
+    for i in range(n):# заполняем массив нулями
+        colums.append(0)
+    mn = min(M)
+    mx = max(M)
+    step = (mx - mn)/n # определение ширины колонки
+    i = 0
+    num_colum = 0
+    while i < len(M) and num_colum < n:
+        if mn + step*num_colum <= M[i] and M[i] <= mn + step*(num_colum+1): # проверка входит ли элемент в промежуток
+            colums[num_colum] += 1
+            i += 1
+        else:
+            num_colum += 1 # переход к следующей колонке
+

@@ -94,4 +94,5 @@ plt.errorbar(x, y, yerr = y_err, fmt = ".")
 plt.plot(x, pred)
 plt.ylabel("ln(U)")
 plt.xlabel("Время")
+
 plt.show()

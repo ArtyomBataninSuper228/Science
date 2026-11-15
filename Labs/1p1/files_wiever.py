@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-
+from scipy import stats as stats2
 from Labs.methods import *
 import integral
 import os
@@ -14,7 +14,8 @@ def process(name):
     for line in f:
         M.append(int(line))
     n = max((5, int((len(M) ** 0.5) + 1)))
-    print(n, int((len(M) ** 0.5) + 1))
+
+
     M = array(M)
     sigma = M.std()
     m = M.mean()
@@ -22,22 +23,19 @@ def process(name):
     mx = max(M)
     columns = split_to_columns(M, n)
     columns = array(columns, dtype=float64)
-    columns /= (len(M)) * (mx - mn) / n
-    xi = get_xi_square(columns, lambda x: normal_disp(mn + (mx - mn) * x / n, m, sigma))
+    xi = get_xi_square(columns, lambda x: ((len(M)) * (mx - mn) / n)*normal_disp(mn + (mx - mn) * x / n, m, sigma))
 
     f = open(name + ".txt", mode="w")
     staticerror = 1/(12**0.5)/length
-    print(staticerror)
     f.write(json.dumps({"mean": M.mean(), "𝜎": M.std(), "central_moment_3": stats.moment(M, 3) / sigma ** 3, "accuracy:":
-          sigma / sqrt(len(M)) + staticerror, "xi^2": xi}))
+          sigma / sqrt(len(M)) + staticerror, "xi^2": xi, "Bins:": float(n), "p-value": float(stats.chi2.sf(xi, n-1))}))
 
     f.close()
     dx = []
 
     for i in range(n):
         dx.append((mn + (mx - mn) / n * i))
-    plt.bar(dx, columns, (mx - mn) // n+1)
-    print()
+    plt.bar(dx, columns, ((mx - mn) / (n)*0.8))
     dy = []
 
     # print(integral.integral(1000, 3000, 1/100, lambda x: normal_disp(x, m, sigma)))
@@ -48,18 +46,17 @@ def process(name):
     for i in range(N):
         dx.append((mn + (mx - mn) / N * i))
     for i in range(N):
-        dy.append(normal_disp(((mx - mn) / N * i + mn), m, sigma))
-    if name == "dt10_n1000":
-        print(columns)
+        dy.append(((len(M)) * (mx - mn) / n)*normal_disp(((mx - mn) / N * i + mn), m, sigma))
 
     plt.plot(dx, dy, color='red')
     plt.savefig(name + ".png", dpi=350)
     plt.close()
+    print(name, n, ((mx - mn) / (n)*0.8))
 
 
 
 
 for i in os.listdir(os.getcwd()):
-    print(i)
-    if i[-3:] == "dat" and i == "dt10_n1000.dat":
+    #print(i)
+    if i[-3:] == "dat": #and i == "dt1000_n200_no_Pu.dat":
         process(i[:-4])

@@ -30,7 +30,7 @@ def get_xi_square(columns,  f):
     res = 0
     for i in range(0, len(columns)):
         E = f(i)
-        res += (columns[i] - E)**2/E
+        res += ((columns[i] - E)**2)/E
     return res
 
 if __name__ == '__main__':

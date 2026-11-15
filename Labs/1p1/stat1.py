@@ -26,7 +26,7 @@ for i in a:
 
 plt.plot(x, y)
 plt.xlabel("кол-во выборок")
-plt.ylabel("sigma/sqrt(n)/mean(x)")
+plt.ylabel(r"$\frac{\sigma}{\sqrt{n}\cdot \hat{x}}$")
 plt.savefig("Error_n.png")
 plt.show()
 
