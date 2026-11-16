@@ -513,3 +513,5 @@ def split_to_columns(M, n = 20):
         else:
             num_colum += 1 # переход к следующей колонке
 
+def poison(n, l):
+    return l**n/factorial(n)*e**(-l)

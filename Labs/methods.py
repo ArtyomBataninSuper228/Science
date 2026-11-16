@@ -4,7 +4,7 @@ from scipy import stats
 from matplotlib import pyplot as plt
 from math import *
 
-def split_to_columns(M, n = 20):
+def split_to_columns(M, n = 20, step = None):
     M = copy.copy(M)
     M.sort()# сортировка массива в порядок элементов по возрастанию
     colums = []
@@ -12,7 +12,8 @@ def split_to_columns(M, n = 20):
         colums.append(0)
     mn = min(M)
     mx = max(M)
-    step = (mx - mn)/n # определение ширины колонки
+    if step is None:
+        step = (mx - mn)/n # определение ширины колонки
     i = 0
     num_colum = 0
     while i < len(M) and num_colum < n:
@@ -32,6 +33,12 @@ def get_xi_square(columns,  f):
         E = f(i)
         res += ((columns[i] - E)**2)/E
     return res
+
+def poison(n, l):
+    return l**n/factorial(n)*e**(-l)
+def poison_2(n, l):
+    return l**n/gamma(n+1)*e**(-l)
+
 
 if __name__ == '__main__':
 
@@ -74,5 +81,6 @@ if __name__ == '__main__':
     print("Dec:", times)
     print("bin", bin(times))
     print("Hex for Verilog:", f"512'h{times:0128x}")
+
 
 
