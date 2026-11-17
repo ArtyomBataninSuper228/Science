@@ -21,7 +21,6 @@ a.sort(key=lambda x: x[0])
 for i in a:
     y.append(i[1]['accuracy:']/i[1]["mean"]*100)
     x.append(i[2])
-    #print(i)
 
 
 
