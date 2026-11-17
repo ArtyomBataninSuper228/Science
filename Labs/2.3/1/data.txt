@@ -1,0 +1,8 @@
+
+termistor 61500Ohm
+R1 1773 Ohm
+R2 2.706Ohm
+L1 = 63мкГн
+C1 = 726450 пкФ
+R3 7 Ohm
+
